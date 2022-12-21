@@ -1,78 +1,89 @@
 import tensorflow as tf
 import numpy as np
-from tensorflow.losses import Reduction
+
+import trees
+from sklearn.tree import DecisionTreeClassifier
 import os
 import errno
 
 
-def filter_hinge_loss(n_class, mask_vector, feat_input,
-					  sigma, temperature, model_fn):
-	n_input = feat_input.shape[0]
-	if not np.any(mask_vector):
-		return np.zeros((n_input, n_class))
+def filter_hinge_loss(n_class, mask_vector, feat_input, sigma, temperature, model) -> tf.Tensor:
+    """
+    Return hinge loss from input features?
+    """
+    n_input = feat_input.shape[0]
 
-	filtered_input = tf.boolean_mask(feat_input, mask_vector)
+    filtered_input = tf.boolean_mask(feat_input, mask_vector)
 
-	if type(sigma) != float or type(sigma) != int:
-		sigma = tf.boolean_mask(sigma, mask_vector)
-	if type(temperature) != float or type(temperature) != int:
-		temperature = tf.boolean_mask(temperature, mask_vector)
+    if not isinstance(model, DecisionTreeClassifier):
+        filtered_loss = trees.get_prob_classification_forest(
+            model, filtered_input, sigma=sigma, temperature=temperature
+        )
+    elif isinstance(model, DecisionTreeClassifier):
+        filtered_loss = trees.get_prob_classification_tree(model, filtered_input, sigma)
 
-	filtered_loss = model_fn(filtered_input, sigma, temperature)
-
-	indices = np.where(mask_vector)[0]
-	zero_loss = np.zeros((n_input, n_class))
-	hinge_loss = tf.tensor_scatter_nd_add(
-		zero_loss,
-		indices[:, None],
-		filtered_loss,
-	)
-	return hinge_loss
+    indices = np.where(mask_vector)[0]
+    zero_loss = np.zeros((n_input, n_class))
+    hinge_loss = tf.tensor_scatter_nd_add(
+        zero_loss,
+        indices[:, None],
+        filtered_loss,
+    )
+    return hinge_loss
 
 
-def safe_euclidean(x, epsilon=10. ** -10, axis=-1):
-	return (tf.reduce_sum(x ** 2, axis=axis) + epsilon) ** 0.5
+def safe_euclidean(x, epsilon=10.0 ** -10, axis=-1):
+    return (tf.reduce_sum(x ** 2, axis=axis) + epsilon) ** 0.5
 
 
 def true_euclidean(x, axis=-1):
-	return (tf.reduce_sum(x ** 2, axis=axis)) ** 0.5
+    return (tf.reduce_sum(x ** 2, axis=axis)) ** 0.5
 
 
-def safe_cosine(x1, x2, epsilon=10. ** -10):
-	normalize_x1 = tf.nn.l2_normalize(x1, dim=1)
-	normalize_x2 = tf.nn.l2_normalize(x2, dim=1)
-	dist = tf.losses.cosine_distance(normalize_x1, normalize_x2, axis=-1, reduction=Reduction.NONE) + epsilon
-	dist = tf.squeeze(dist)
-	dist = tf.cast(dist, tf.float64)
-	return dist
+def safe_cosine(x1, x2, epsilon=10.0 ** -10):
+    normalize_x1 = tf.nn.l2_normalize(x1, dim=1)
+    normalize_x2 = tf.nn.l2_normalize(x2, dim=1)
+    cosine_loss = tf.keras.losses.CosineSimilarity(
+            axis=-1, reduction=tf.keras.losses.Reduction.NONE
+        )
+    dist = cosine_loss(normalize_x1, normalize_x2) + 1 + epsilon
+
+    dist = tf.squeeze(dist)
+    dist = tf.cast(dist, tf.float64)
+    return dist
 
 
-def true_cosine(x1: object, x2: object, axis=-1) -> object:
-	normalize_x1 = tf.nn.l2_normalize(x1, dim=1)
-	normalize_x2 = tf.nn.l2_normalize(x2, dim=1)
-	dist = tf.losses.cosine_distance(normalize_x1, normalize_x2, axis=axis, reduction=Reduction.NONE)
-	dist = tf.squeeze(dist)
-	dist = tf.cast(dist, tf.float64)
-	return dist
+def true_cosine(x1: object, x2: object) -> object:
+    normalize_x1 = tf.nn.l2_normalize(x1, dim=1)
+    normalize_x2 = tf.nn.l2_normalize(x2, dim=1)
+    dist = tf.losses.cosine_distance(
+        normalize_x1, normalize_x2, axis=-1, reduction=tf.compat.v1.losses.Reduction.NONE
+    )
+    dist = tf.squeeze(dist)
+    dist = tf.cast(dist, tf.float64)
+    return dist
 
 
-def safe_l1(x, epsilon=10. ** -10, axis=1):
-	return tf.reduce_sum(tf.abs(x), axis=axis) + epsilon
+def safe_l1(x, epsilon=10.0 ** -10, axis=1):
+    return tf.reduce_sum(tf.abs(x), axis=axis) + epsilon
 
 
 def true_l1(x, axis=1):
-	return tf.reduce_sum(tf.abs(x), axis=axis)
+    return tf.reduce_sum(tf.abs(x), axis=axis)
 
 
 def tf_cov(x):
-	mean_x = tf.reduce_mean(x, axis=0, keep_dims=True)
+	mean_x = tf.reduce_mean(x, axis=0, keepdims=True)
 	mx = tf.matmul(tf.transpose(mean_x), mean_x)
 	vx = tf.matmul(tf.transpose(x), x) / tf.cast(tf.shape(x)[0], tf.float64)
 	cov_xx = vx - mx
 	return cov_xx
 
-def safe_mahal(x, inv_covar, epsilon=10. ** -10):
-	return tf.reduce_sum(tf.multiply(tf.matmul(x + epsilon, inv_covar), x + epsilon), axis=1)
+
+def safe_mahal(x, inv_covar, epsilon=10.0 ** -10):
+    return tf.reduce_sum(
+        tf.multiply(tf.matmul(x + epsilon, inv_covar), x + epsilon), axis=1
+    )
 
 
 def true_mahal(x, inv_covar):
