@@ -3,9 +3,9 @@ import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
 
-def _exact_activation_by_index(feat_input, feat_index, threshold):
-    boolean_act = tf.math.greater(feat_input[:, feat_index], threshold)
-    return tf.logical_not(boolean_act), boolean_act
+# def _exact_activation_by_index(feat_input, feat_index, threshold):
+#     boolean_act = tf.math.greater(feat_input[:, feat_index], threshold)
+#     return tf.logical_not(boolean_act), boolean_act
 
 
 # def _approx_activation_by_index(feat_input, feat_index, threshold, sigma):
@@ -24,37 +24,30 @@ def _exact_activation_by_index(feat_input, feat_index, threshold):
 #     return 1.0 - activation, activation
 
 
-def _double_activation_by_index(feat_input, feat_index, threshold, sigma):
-    e_l, e_r = _exact_activation_by_index(feat_input, feat_index, threshold)
-    a_l, a_r = _approx_activation_by_index(feat_input, feat_index, threshold, sigma)
-    return (e_l, a_l), (e_r, a_r)
+# def _double_activation_by_index(feat_input, feat_index, threshold, sigma):
+#     e_l, e_r = _exact_activation_by_index(feat_input, feat_index, threshold)
+#     a_l, a_r = _approx_activation_by_index(feat_input, feat_index, threshold, sigma)
+#     return (e_l, a_l), (e_r, a_r)
+#
+#
+# def _split_node_by_index(node, feat_input, feat_index, threshold, sigma):
+#     # exact node and approximate node
+#     e_o, a_o = node
+#     ((e_l, a_l), (e_r, a_r)) = _double_activation_by_index(
+#         feat_input, feat_index, threshold, sigma
+#     )
+#     return (
+#         (tf.logical_and(e_l, e_o), a_l * a_o),
+#         (tf.logical_and(e_r, e_o), a_r * a_o),
+#     )
 
 
-def _split_node_by_index(node, feat_input, feat_index, threshold, sigma):
-    # exact node and approximate node
-    e_o, a_o = node
-    ((e_l, a_l), (e_r, a_r)) = _double_activation_by_index(
-        feat_input, feat_index, threshold, sigma
-    )
-    return (
-        (tf.logical_and(e_l, e_o), a_l * a_o),
-        (tf.logical_and(e_r, e_o), a_r * a_o),
-    )
-
-
-# def _split_approx(node, feat_input, feat_index, threshold, sigma):
+# def _split_exact(node, feat_input, feat_index, threshold):
+#     print("split exact")
 #     if node is None:
-#         node = 1.0
-#     left_node, right_node = _approx_activation_by_index(feat_input, feat_index, threshold, sigma)
-#     return node * left_node, node * right_node
-
-
-def _split_exact(node, feat_input, feat_index, threshold):
-    print("split exact")
-    if node is None:
-        node = True
-    l_n, r_n = _exact_activation_by_index(feat_input, feat_index, threshold)
-    return tf.logical_and(node, l_n), tf.logical_and(node, r_n)
+#         node = True
+#     l_n, r_n = _exact_activation_by_index(feat_input, feat_index, threshold)
+#     return tf.logical_and(node, l_n), tf.logical_and(node, r_n)
 
 
 def _parse_class_tree(tree, feat_input, sigma: float):
@@ -98,10 +91,15 @@ def _parse_class_tree(tree, feat_input, sigma: float):
                 cur_node = 1.0
 
             sigma = np.full(len(feat_input), sigma)
-            activation = tf.math.sigmoid((feat_input[:, feature[i]] - threshold[i]) * sigma)
+            activation = tf.math.sigmoid(
+                (feat_input[:, feature[i]] - threshold[i]) * sigma
+            )
 
             left_node, right_node = 1.0 - activation, activation
-            nodes[children_left[i]], nodes[children_right[i]] = cur_node * left_node, cur_node * right_node
+            nodes[children_left[i]], nodes[children_right[i]] = (
+                cur_node * left_node,
+                cur_node * right_node,
+            )
 
         else:
             max_class = np.argmax(values[i])
@@ -115,15 +113,15 @@ def get_prob_classification_tree(tree, feat_input, sigma: float):
     leaf_nodes = _parse_class_tree(tree, feat_input, sigma)
 
     if tree.tree_.node_count > 1:
-        out_l = [sum(leaf_nodes[c_i]) for c_i in range(len(tree.classes_))]
+        prob_list = [sum(leaf_nodes[c_i]) for c_i in range(len(tree.classes_))]
         i = 0
-        while i < len(out_l):
-            if out_l[i].numpy().all() == 0:
-                out_l.pop(i)
+        while i < len(prob_list):
+            if prob_list[i].numpy().all() == 0:
+                prob_list.pop(i)
             else:
                 i += 1
 
-        stacked = tf.stack(out_l, axis=-1)
+        stacked = tf.stack(prob_list, axis=-1)
 
     else:  # sometimes tree only has one node
         only_class = tree.predict(
@@ -149,28 +147,29 @@ def get_prob_classification_tree(tree, feat_input, sigma: float):
     return stacked
 
 
-def get_exact_classification_tree(tree, feat_columns, feat_input):
-    leaf_nodes = _parse_class_tree(tree, feat_input, sigma)
+# def get_exact_classification_tree(tree, feat_input, sigma):
+#     leaf_nodes = _parse_class_tree(tree, feat_input, sigma)
+#
+#     out_l = []
+#     for class_name in tree.classes_:
+#         out_l.append(tf.reduce_any(leaf_nodes[class_name]))
+#     return tf.cast(tf.stack(out_l, axis=-1), dtype=tf.float64)
 
-    out_l = []
-    for class_name in tree.classes_:
-        out_l.append(tf.reduce_any(leaf_nodes[class_name]))
-    return tf.cast(tf.stack(out_l, axis=-1), dtype=tf.float64)
 
-
-def get_prob_classification_forest(
-    model, feat_columns, feat_input, sigma=10.0, temperature=1.0
-):
-    tree_parser = lambda x: get_prob_classification_tree(x, feat_columns, sigma)
-    tree_l = [tree_parser(estimator) for estimator in model.estimators_][:100]
+def get_prob_classification_forest(model, feat_input: tf.Tensor, sigma: float, temperature: float):
+    dt_prob_list = [
+        get_prob_classification_tree(estimator, feat_input, sigma)
+        for estimator in model.estimators_
+    ][:100]
 
     if isinstance(model, AdaBoostClassifier):
         weights = model.estimator_weights_
     elif isinstance(model, RandomForestClassifier):
         weights = np.full(len(model.estimators_), 1 / len(model.estimators_))
 
-    logits = sum(w * tree for w, tree in zip(weights, tree_l))
+    logits = sum(w * tree for w, tree in zip(weights, dt_prob_list))
 
+    temperature = np.full(len(feat_input), temperature)
     if type(temperature) in [float, int]:
         expits = tf.exp(temperature * logits)
     else:
