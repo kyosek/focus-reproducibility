@@ -4,7 +4,13 @@ import pandas as pd
 import json
 
 
-def generate_cf_stats(output_root: str, data_name: str, distance_function, unchanged_ever, counterfactual_examples):
+def generate_cf_stats(
+    output_root: str,
+    data_name: str,
+    distance_function,
+    unchanged_ever,
+    counterfactual_examples,
+):
     cf_stats = {
         "dataset": data_name,
         "distance_function": distance_function,
@@ -24,4 +30,4 @@ def generate_perturbed_df(n_examples, best_distance, best_perturb, feat_columns)
 
 
 def generate_perturbed_df_diff(df_perturb, feat_input):
-    return df_perturb - feat_input
+    return pd.DataFrame(df_perturb - feat_input)

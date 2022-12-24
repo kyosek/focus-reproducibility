@@ -1,64 +1,17 @@
 import tensorflow as tf
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-
-
-# def _exact_activation_by_index(feat_input, feat_index, threshold):
-#     boolean_act = tf.math.greater(feat_input[:, feat_index], threshold)
-#     return tf.logical_not(boolean_act), boolean_act
-
-
-# def _approx_activation_by_index(feat_input, feat_index, threshold, sigma):
-#     """
-#     Looking into each feature values against the threshold
-#     and put it through the sigmoid function
-#     returns left and right children approximation
-#
-#     left child = sig(threshold - feat_input)
-#     right child = sig(feat_input - threshold)
-#     sig(z) = 1 / (1 + exp(sigma * z))
-#     when sigma increases, the approximation is closer to t_j
-#     """
-#     activation = tf.math.sigmoid((feat_input[:, feat_index] - threshold) * sigma)
-#
-#     return 1.0 - activation, activation
-
-
-# def _double_activation_by_index(feat_input, feat_index, threshold, sigma):
-#     e_l, e_r = _exact_activation_by_index(feat_input, feat_index, threshold)
-#     a_l, a_r = _approx_activation_by_index(feat_input, feat_index, threshold, sigma)
-#     return (e_l, a_l), (e_r, a_r)
-#
-#
-# def _split_node_by_index(node, feat_input, feat_index, threshold, sigma):
-#     # exact node and approximate node
-#     e_o, a_o = node
-#     ((e_l, a_l), (e_r, a_r)) = _double_activation_by_index(
-#         feat_input, feat_index, threshold, sigma
-#     )
-#     return (
-#         (tf.logical_and(e_l, e_o), a_l * a_o),
-#         (tf.logical_and(e_r, e_o), a_r * a_o),
-#     )
-
-
-# def _split_exact(node, feat_input, feat_index, threshold):
-#     print("split exact")
-#     if node is None:
-#         node = True
-#     l_n, r_n = _exact_activation_by_index(feat_input, feat_index, threshold)
-#     return tf.logical_and(node, l_n), tf.logical_and(node, r_n)
+from src.utils import filter_hinge_loss, calculate_distance
 
 
 def _parse_class_tree(tree, feat_input, sigma: float):
     # Code is adapted from https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html
-    # n_classes = len(tree.classes_)
     n_nodes = tree.tree_.node_count
     children_left = tree.tree_.children_left
     children_right = tree.tree_.children_right
     # feature returns the nodes/leaves in a sequential order as a DFS
     feature = tree.tree_.feature
-    # threshold for impurity - do they use gain instead?
+    # threshold for impurity
     threshold = tree.tree_.threshold
     values = tree.tree_.value
 
@@ -147,7 +100,9 @@ def get_prob_classification_tree(tree, feat_input, sigma: float):
     return prob_stacked
 
 
-def get_prob_classification_forest(model, feat_input: tf.Tensor, sigma: float, temperature: float):
+def get_prob_classification_forest(
+    model, feat_input: tf.Tensor, sigma: float, temperature: float
+):
     dt_prob_list = [
         get_prob_classification_tree(estimator, feat_input, sigma)
         for estimator in model.estimators_
@@ -169,3 +124,109 @@ def get_prob_classification_forest(model, feat_input: tf.Tensor, sigma: float, t
     softmax = expits / tf.reduce_sum(expits, axis=1)[:, None]
 
     return softmax
+
+
+def fit(
+    model,
+    feat_input,
+    sigma_val,
+    temperature_val,
+    distance_weight_val,
+    distance_function,
+    opt,
+    lr,
+    num_iter=100,
+    x_train=None,
+    verbose=1,
+):
+    perturbed = tf.Variable(
+        initial_value=feat_input,
+        trainable=True,
+        name="perturbed_features",
+    )
+
+    n_examples = len(feat_input)
+    distance_weight = np.full(n_examples, distance_weight_val)
+    to_optimize = [perturbed]
+    indicator = np.ones(n_examples)
+    best_perturb = np.zeros(perturbed.shape)
+    best_distance = np.full(n_examples, 1000.0)  # all distances should be below 1000
+    perturb_iteration_found = np.full(n_examples, 1000 * num_iter, dtype=int)
+
+    predictions = model.predict(feat_input)
+    class_index = np.zeros(n_examples, dtype=int)
+    for i, class_name in enumerate(model.classes_):
+        mask = np.equal(predictions, class_name)
+        class_index[mask] = i
+    class_index = tf.constant(class_index, dtype=tf.int64)
+    example_range = tf.constant(np.arange(n_examples, dtype=int))
+    example_class_index = tf.stack((example_range, class_index), axis=1)
+
+    if opt == "adam":
+        optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+    elif opt == "gd":
+        optimizer = tf.keras.optimizers.SGD(learning_rate=lr)
+
+    with tf.GradientTape(persistent=True) as tape:
+        for i in range(num_iter):
+            if verbose != 0:
+                print(f"iteration {i}")
+
+            hinge_loss = filter_hinge_loss(
+                len(model.classes_),
+                indicator,
+                perturbed,
+                sigma_val,
+                temperature_val,
+                model,
+            )
+
+            approx_prob = tf.gather_nd(hinge_loss, example_class_index)
+
+            distance = calculate_distance(
+                distance_function, perturbed, feat_input, x_train
+            )
+
+            hinge_approx_prob = indicator * approx_prob
+            loss = tf.reduce_mean(hinge_approx_prob + distance_weight * distance)
+
+            grad = tape.gradient(loss, to_optimize)
+
+            optimizer.apply_gradients(
+                zip(grad, to_optimize),
+            )
+            # Make sure perturbed values are between 0 and 1 (inclusive)
+            perturbed.assign(tf.math.minimum(1, tf.math.maximum(0, perturbed)))
+
+            true_distance = calculate_distance(
+                distance_function, perturbed, feat_input, x_train
+            )
+
+            cur_predict = model.predict(perturbed.numpy())
+            indicator = np.equal(predictions, cur_predict).astype(np.float64)
+            idx_flipped = np.argwhere(indicator == 0).flatten()
+
+            # get the best perturbation so far
+            mask_flipped = np.not_equal(predictions, cur_predict)
+
+            perturb_iteration_found[idx_flipped] = np.minimum(
+                i + 1, perturb_iteration_found[idx_flipped]
+            )
+
+            distance_numpy = true_distance.numpy()
+            mask_smaller_dist = np.less(
+                distance_numpy, best_distance
+            )  # is dist < previous best dist?
+
+            temp_dist = best_distance.copy()
+            temp_dist[mask_flipped] = distance_numpy[mask_flipped]
+            best_distance[mask_smaller_dist] = temp_dist[mask_smaller_dist]
+
+            temp_perturb = best_perturb.copy()
+            temp_perturb[mask_flipped] = perturbed[mask_flipped]
+            best_perturb[mask_smaller_dist] = temp_perturb[mask_smaller_dist]
+
+            unchanged_ever = best_distance[best_distance == 1000.0]
+            counterfactual_examples = best_distance[best_distance != 1000.0]
+
+        return unchanged_ever, counterfactual_examples, best_distance, best_perturb

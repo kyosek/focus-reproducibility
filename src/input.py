@@ -10,5 +10,3 @@ import argparse
 import time
 import pandas as pd
 import json
-
-
