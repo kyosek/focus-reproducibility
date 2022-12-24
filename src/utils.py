@@ -123,7 +123,9 @@ def calculate_distance(distance_function: str, perturbed, feat_input, x_train=No
     elif distance_function == "l1":
         return safe_l1(perturbed - feat_input)
     elif distance_function == "mahal":
-        # if inv_covar not None:
-        return safe_mahal(perturbed - feat_input, x_train)
-        # else:
-        #     raise ValueError
+        try:
+            x_train.any()
+            return safe_mahal(perturbed - feat_input, x_train)
+        except ValueError:
+            print("x_train is empty")
+
