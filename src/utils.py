@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-import trees
+import approximation
 from sklearn.tree import DecisionTreeClassifier
 import os
 import errno
@@ -18,11 +18,13 @@ def filter_hinge_loss(
     filtered_input = tf.boolean_mask(feat_input, mask_vector)
 
     if not isinstance(model, DecisionTreeClassifier):
-        filtered_loss = trees.get_prob_classification_forest(
+        filtered_loss = approximation.get_prob_classification_forest(
             model, filtered_input, sigma=sigma, temperature=temperature
         )
     elif isinstance(model, DecisionTreeClassifier):
-        filtered_loss = trees.get_prob_classification_tree(model, filtered_input, sigma)
+        filtered_loss = approximation.get_prob_classification_tree(
+            model, filtered_input, sigma
+        )
 
     indices = np.where(mask_vector)[0]
     hinge_loss = tf.tensor_scatter_nd_add(
@@ -85,9 +87,11 @@ def tf_cov(x):
     return cov_xx
 
 
-def safe_mahal(x, inv_covar, epsilon=10.0 ** -10):
+def safe_mahal(x_test, x_train, epsilon=10.0 ** -10):
+    covar = tf_cov(x_train)
+    inv_covar = tf.linalg.inv(covar)
     return tf.reduce_sum(
-        tf.multiply(tf.matmul(x + epsilon, inv_covar), x + epsilon), axis=1
+        tf.multiply(tf.matmul(x_test + epsilon, inv_covar), x_test + epsilon), axis=1
     )
 
 
@@ -111,7 +115,7 @@ def safe_open(path, w):
     return open(path, w)
 
 
-def calculate_distance(distance_function: str, perturbed, feat_input, inv_covar=None):
+def calculate_distance(distance_function: str, perturbed, feat_input, x_train=None):
     if distance_function == "euclidean":
         return safe_euclidean(perturbed - feat_input, axis=1)
     elif distance_function == "cosine":
@@ -119,8 +123,9 @@ def calculate_distance(distance_function: str, perturbed, feat_input, inv_covar=
     elif distance_function == "l1":
         return safe_l1(perturbed - feat_input)
     elif distance_function == "mahal":
-        # if inv_covar not None:
-        return safe_mahal(perturbed - feat_input, inv_covar)
-        # else:
-        #     raise ValueError
+        try:
+            x_train.any()
+            return safe_mahal(perturbed - feat_input, x_train)
+        except ValueError:
+            print("x_train is empty")
 
