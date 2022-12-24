@@ -23,8 +23,8 @@ def generate_cf_stats(
         json.dump(cf_stats, gsout)
 
 
-def generate_perturbed_df(n_examples, best_distance, best_perturb, feat_columns):
-    df_dist = pd.DataFrame({"id": range(n_examples), "best_distance": best_distance})
+def generate_perturbed_df(best_distance, best_perturb, feat_columns):
+    df_dist = pd.DataFrame({"id": range(len(best_distance)), "best_distance": best_distance})
     df_perturb = pd.DataFrame(best_perturb, columns=feat_columns[:-1])
     return pd.concat([df_dist, df_perturb], axis=1)
 

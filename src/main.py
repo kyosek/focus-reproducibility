@@ -1,7 +1,4 @@
-import utils
-import tensorflow as tf
 import numpy as np
-from utils import calculate_distance, filter_hinge_loss
 from evaluate import (
     generate_perturbed_df,
     generate_perturbed_df_diff,
@@ -9,11 +6,9 @@ from evaluate import (
 )
 from approximation import fit
 import joblib
-from sklearn.tree import DecisionTreeClassifier
 import argparse
 import time
 import pandas as pd
-import json
 
 
 # parser = argparse.ArgumentParser()
@@ -64,9 +59,6 @@ df = pd.read_csv("data/{}".format(data_name), sep="\t", index_col=0)
 feat_columns = df.columns
 feat_matrix = df.values.astype(float)
 
-n_examples = feat_matrix.shape[0]
-n_class = len(model.classes_)
-
 # Remove the last column which is the label
 feat_input = feat_matrix[:, :-1]
 
@@ -106,11 +98,9 @@ unchanged_ever, counterfactual_examples, best_distance, best_perturb = fit(
 generate_cf_stats(
     output_root, data_name, distance_function, unchanged_ever, counterfactual_examples
 )
-df_perturb = generate_perturbed_df(
-    n_examples, best_distance, best_perturb, feat_columns
-)
+df_perturb = generate_perturbed_df(best_distance, best_perturb, feat_columns)
 df_diff = generate_perturbed_df_diff(best_perturb, feat_input)
 
 end_time = time.time()
 
-print("Finished!! ~{} sec".format(np.round(end_time - start_time), 2))
+print("Finished!! ~{} sec".format(np.round(end_time - start_time)))
