@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-import trees
+import approximation
 from sklearn.tree import DecisionTreeClassifier
 import os
 import errno
@@ -18,11 +18,11 @@ def filter_hinge_loss(
     filtered_input = tf.boolean_mask(feat_input, mask_vector)
 
     if not isinstance(model, DecisionTreeClassifier):
-        filtered_loss = trees.get_prob_classification_forest(
+        filtered_loss = approximation.get_prob_classification_forest(
             model, filtered_input, sigma=sigma, temperature=temperature
         )
     elif isinstance(model, DecisionTreeClassifier):
-        filtered_loss = trees.get_prob_classification_tree(model, filtered_input, sigma)
+        filtered_loss = approximation.get_prob_classification_tree(model, filtered_input, sigma)
 
     indices = np.where(mask_vector)[0]
     hinge_loss = tf.tensor_scatter_nd_add(

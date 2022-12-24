@@ -121,7 +121,7 @@ def get_prob_classification_tree(tree, feat_input, sigma: float):
             else:
                 i += 1
 
-        stacked = tf.stack(prob_list, axis=-1)
+        prob_stacked = tf.stack(prob_list, axis=-1)
 
     else:  # sometimes tree only has one node
         only_class = tree.predict(
@@ -143,17 +143,8 @@ def get_prob_classification_tree(tree, feat_input, sigma: float):
         else:
             raise ValueError
         class_labels = [class_0, class_1]
-        stacked = tf.stack(class_labels, axis=1)
-    return stacked
-
-
-# def get_exact_classification_tree(tree, feat_input, sigma):
-#     leaf_nodes = _parse_class_tree(tree, feat_input, sigma)
-#
-#     out_l = []
-#     for class_name in tree.classes_:
-#         out_l.append(tf.reduce_any(leaf_nodes[class_name]))
-#     return tf.cast(tf.stack(out_l, axis=-1), dtype=tf.float64)
+        prob_stacked = tf.stack(class_labels, axis=1)
+    return prob_stacked
 
 
 def get_prob_classification_forest(model, feat_input: tf.Tensor, sigma: float, temperature: float):

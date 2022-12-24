@@ -1,9 +1,8 @@
-import dataset
-import trees
 import utils
 import tensorflow as tf
 import numpy as np
 from utils import calculate_distance, filter_hinge_loss
+from evaluate import generate_perturbed_df, generate_perturbed_df_diff, generate_cf_stats
 import joblib
 from sklearn.tree import DecisionTreeClassifier
 import argparse
@@ -45,44 +44,34 @@ temperature_val = 2.0
 distance_weight_val = 0.005
 lr = 0.001
 opt = "adam"
-num_iter = 1000
-model_name = "model_ada_cf_compas_num_iter100_depth2_lr0.1"
-data_name = "cf_compas_num_data_test.tsv"
-model_type = "ss"
+num_iter = 10
 distance_function = "mahal"
 
-# assert sigma_val != 0
-# assert temperature_val >= 0
-# assert distance_weight_val >= 0
-# assert lr >= 0
-# assert opt != " "
-# assert model_name != " "
-# assert data_name != " "
-# assert model_type != " "
+model_name = "model_dt_cf_compas_num_depth4"
+data_name = "cf_compas_num_data_test.tsv"
+model_type = "ss"
 
 start_time = time.time()
 # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
 model = joblib.load("models/{}".format(model_name), "rb")
 
-(feat_columns, feat_matrix, feat_missing_mask) = dataset.read_tsv_file(
-    "data/{}".format(data_name), "rb"
-)
+df = pd.read_csv("data/{}".format(data_name), sep="\t", index_col=0)
+feat_columns = df.columns
+feat_matrix = df.values.astype(float)
 
 n_examples = feat_matrix.shape[0]
 n_class = len(model.classes_)
 
 # Remove the last column which is the label
 feat_input = feat_matrix[:, :-1]
-# median_values = np.median(feat_input, axis=0)
-# mad = np.mean(np.abs(feat_input - median_values[None, :]), axis=0)
 
-ground_truth = model.predict(feat_input)
-class_index = np.zeros(n_examples, dtype=np.int64)
+predictions = model.predict(feat_input)
+class_index = np.zeros(n_examples, dtype=int)
 for i, class_name in enumerate(model.classes_):
-    mask = np.equal(ground_truth, class_name)
+    mask = np.equal(predictions, class_name)
     class_index[mask] = i
 class_index = tf.constant(class_index, dtype=tf.int64)
-example_range = tf.constant(np.arange(n_examples, dtype=np.int64))
+example_range = tf.constant(np.arange(n_examples, dtype=int))
 example_class_index = tf.stack((example_range, class_index), axis=1)
 
 # Include training data to compute covariance matrix for Mahalanobis distance
@@ -99,8 +88,6 @@ perturbed = tf.Variable(
     name="perturbed_features",
 )
 
-
-
 output_root = (
     "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
         distance_function,
@@ -114,14 +101,12 @@ output_root = (
     )
 )
 
-# sigma = np.full(n_examples, sigma_val)
-# temperature = np.full(n_examples, temperature_val)
 distance_weight = np.full(n_examples, distance_weight_val)
 to_optimize = [perturbed]
 indicator = np.ones(n_examples)
 best_perturb = np.zeros(perturbed.shape)
 best_distance = np.full(n_examples, 1000.0)  # all distances should be below 1000
-perturb_iteration_found = np.full(n_examples, 1000 * num_iter, dtype=np.int64)
+perturb_iteration_found = np.full(n_examples, 1000 * num_iter, dtype=int)
 average_distance = np.zeros(num_iter)
 
 # calling optimizer in the for loop will change the results
@@ -130,129 +115,69 @@ if opt == "adam":
 elif opt == "gd":
     optimizer = tf.keras.optimizers.SGD(learning_rate=lr)
 
-with utils.safe_open(output_root + ".txt", "w") as fout:
-    fout.write(
-        "{} {} {} --sigma={} --temp={} --distance_weight={} --lr={}\n".format(
-            model_name,
-            opt,
-            distance_function,
-            sigma_val,
-            temperature_val,
-            distance_weight_val,
-            lr,
+with tf.GradientTape(persistent=True) as tape:
+    for i in range(num_iter):
+        print(f"iteration {i}")
+
+        hinge_loss = filter_hinge_loss(
+            n_class, indicator, perturbed, sigma_val, temperature_val, model
         )
-    )
-    with tf.GradientTape(persistent=True) as tape:
-        for i in range(num_iter):
-            print(f"iteration {i}")
+        approx_prob = tf.gather_nd(hinge_loss, example_class_index)
 
-            hinge_loss = filter_hinge_loss(
-                n_class, indicator, perturbed, sigma_val, temperature_val, model
-            )
-            approx_prob = tf.gather_nd(hinge_loss, example_class_index)
+        distance = calculate_distance(
+            distance_function, perturbed, feat_input, inv_covar
+        )
 
-            distance = calculate_distance(
-                distance_function, perturbed, feat_input, inv_covar
-            )
+        hinge_approx_prob = indicator * approx_prob
+        loss = tf.reduce_mean(hinge_approx_prob + distance_weight * distance)
 
-            hinge_approx_prob = indicator * approx_prob
-            loss = tf.reduce_mean(hinge_approx_prob + distance_weight * distance)
+        grad = tape.gradient(loss, to_optimize)
 
-            grad = tape.gradient(loss, to_optimize)
+        optimizer.apply_gradients(
+            zip(grad, to_optimize),
+        )
+        # Make sure perturbed values are between 0 and 1 (inclusive)
+        perturbed.assign(tf.math.minimum(1, tf.math.maximum(0, perturbed)))
 
-            optimizer.apply_gradients(
-                zip(grad, to_optimize),
-            )
-            # Make sure perturbed values are between 0 and 1 (inclusive)
-            perturbed.assign(tf.math.minimum(1, tf.math.maximum(0, perturbed)))
+        true_distance = calculate_distance(
+            distance_function, perturbed, feat_input, inv_covar
+        )
 
-            true_distance = calculate_distance(
-                distance_function, perturbed, feat_input, inv_covar
-            )
+        cur_predict = model.predict(perturbed.numpy())
+        indicator = np.equal(predictions, cur_predict).astype(np.float64)
+        idx_flipped = np.argwhere(indicator == 0).flatten()
 
-            cur_predict = model.predict(perturbed.numpy())
-            indicator = np.equal(ground_truth, cur_predict).astype(np.float64)
-            idx_flipped = np.argwhere(indicator == 0).flatten()
+        # get the best perturbation so far
+        mask_flipped = np.not_equal(predictions, cur_predict)
 
-            # get the best perturbation so far
-            mask_flipped = np.not_equal(ground_truth, cur_predict)
+        perturb_iteration_found[idx_flipped] = np.minimum(
+            i + 1, perturb_iteration_found[idx_flipped]
+        )
 
-            perturb_iteration_found[idx_flipped] = np.minimum(
-                i + 1, perturb_iteration_found[idx_flipped]
-            )
+        distance_numpy = true_distance.numpy()
+        mask_smaller_dist = np.less(
+            distance_numpy, best_distance
+        )  # is dist < previous best dist?
 
-            distance_numpy = true_distance.numpy()
-            mask_smaller_dist = np.less(
-                distance_numpy, best_distance
-            )  # is dist < previous best dist?
+        temp_dist = best_distance.copy()
+        temp_dist[mask_flipped] = distance_numpy[mask_flipped]
+        best_distance[mask_smaller_dist] = temp_dist[mask_smaller_dist]
 
-            temp_dist = best_distance.copy()
-            temp_dist[mask_flipped] = distance_numpy[mask_flipped]
-            best_distance[mask_smaller_dist] = temp_dist[mask_smaller_dist]
+        temp_perturb = best_perturb.copy()
+        temp_perturb[mask_flipped] = perturbed[mask_flipped]
+        best_perturb[mask_smaller_dist] = temp_perturb[mask_smaller_dist]
 
-            temp_perturb = best_perturb.copy()
-            temp_perturb[mask_flipped] = perturbed[mask_flipped]
-            best_perturb[mask_smaller_dist] = temp_perturb[mask_smaller_dist]
+        end_time = time.time()
 
-            fout.write("iteration: {}\n".format(i))
-            fout.write("loss: {} ".format(loss.numpy()))
-            fout.write("unchanged: {} ".format(np.sum(indicator)))
-            fout.write("prob: {} ".format(tf.reduce_mean(approx_prob).numpy()))
-            fout.write("mean dist: {} ".format(tf.reduce_mean(distance).numpy()))
-            fout.write("sigma: {} ".format(np.amax(sigma_val)))
-            fout.write("temp: {}\n".format(np.amax(temperature_val)))
-            end_time = time.time()
-
-            unchanged_ever = best_distance[best_distance == 1000.0]
-            counterfactual_examples = best_distance[best_distance != 1000.0]
-            average_distance[i] = np.mean(counterfactual_examples)
-
-            fout.write("Unchanged ever: {}\n".format(len(unchanged_ever)))
-            if len(unchanged_ever) == 0:
-
-                fout.write(
-                    "Mean {} dist for cf example v1: {}\n".format(
-                        distance_function, tf.reduce_mean(best_distance)
-                    )
-                )
-                fout.write(
-                    "Mean {} dist for cf example v2: {}\n".format(
-                        distance_function, np.mean(counterfactual_examples)
-                    )
-                )
-                # break
-
-            else:
-                fout.write("Not all instances have counterfactual examples!! :(\n")
-            fout.write("-------------------------- \n")
-
-    fout.write("Finished in: {}sec \n".format(np.round(end_time - start_time), 2))
+        unchanged_ever = best_distance[best_distance == 1000.0]
+        counterfactual_examples = best_distance[best_distance != 1000.0]
+        average_distance[i] = np.mean(counterfactual_examples)
 
 perturb_iteration_found[perturb_iteration_found == 1000 * num_iter] = 0
 
-cf_stats = {
-    "dataset": data_name,
-    "model_type": model_type,
-    "opt": opt,
-    "distance_function": distance_function,
-    "sigma": sigma_val,
-    "temp": temperature_val,
-    "dweight": distance_weight_val,
-    "lr": lr,
-    "unchanged_ever": len(unchanged_ever),
-    "mean_dist": np.mean(counterfactual_examples),
-}
+# Evaluation
+generate_cf_stats(output_root, data_name, distance_function, unchanged_ever, counterfactual_examples)
+df_perturb = generate_perturbed_df(n_examples, best_distance, best_perturb, feat_columns)
+df_diff = generate_perturbed_df_diff(df_perturb, feat_input)
 
-print("saving the text file")
-with utils.safe_open(output_root + "_cf_stats.txt", "w") as gsout:
-    json.dump(cf_stats, gsout)
-
-# Output results
-
-df_dist = pd.DataFrame({"id": range(n_examples), "best_distance": best_distance})
-df_perturb = pd.DataFrame(best_perturb, columns=feat_columns[:-1])
-df = pd.concat([df_dist, df_perturb], axis=1)
-diff_df = feat_input - df_perturb
-
-df.to_csv(output_root + ".tsv", sep="\t")
 print("Finished!! ~{} sec".format(np.round(end_time - start_time), 2))
