@@ -9,6 +9,7 @@ from approximation import fit
 import joblib
 import argparse
 import time
+import pickle
 import pandas as pd
 
 
@@ -41,23 +42,21 @@ import pandas as pd
 # distance_function = args.distance_function
 
 def main():
-    sigma_val = 4.0
-    temperature_val = 2.0
-    distance_weight_val = 0.005
-    lr = 0.001
+    sigma_val = 5.0
+    temperature_val = 10.0
+    distance_weight_val = 0.01
+    lr = 0.005
     opt = "adam"
-    num_iter = 10
+    num_iter = 1000
     distance_function = "mahal"
 
     model_name = "model_dt_cf_compas_num_depth4"
-    data_name = "cf_compas_num_data_test.tsv"
+    data_name = "cf_compas_num_data_test"
     model_type = "ss"
 
     start_time = time.time()
-    # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
-    model = joblib.load("models/{}".format(model_name), "rb")
 
-    df = pd.read_csv("data/{}".format(data_name), sep="\t", index_col=0)
+    df = pd.read_csv("data/{}.tsv".format(data_name), sep="\t", index_col=0)
     feat_columns = df.columns
     feat_matrix = df.values.astype(float)
 
@@ -67,8 +66,12 @@ def main():
     # Include training data to compute covariance matrix for Mahalanobis distance
     # sort this when refactoring the inputs
     train_name = data_name.replace("test", "train")
-    train_data = pd.read_csv("data/{}".format(train_name), sep="\t", index_col=0)
+    train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
     x_train = np.array(train_data.iloc[:, :-1])
+
+    # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
+    # model = joblib.load("models/{}".format(model_name), "rb")
+    model = pickle.load(open("my_models/dt_" + train_name + ".pkl", 'rb'))
 
     output_root = (
         "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
@@ -92,7 +95,7 @@ def main():
         distance_function,
         opt,
         lr,
-        num_iter=10,
+        num_iter=num_iter,
         x_train=x_train,
         verbose=1,)
 
