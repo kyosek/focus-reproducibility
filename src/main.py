@@ -1,13 +1,15 @@
 import numpy as np
 from evaluate import (
+    generate_perturb_df,
     generate_perturbed_df,
-    generate_perturbed_df_diff,
     generate_cf_stats,
+    plot_pertubed,
 )
 from approximation import fit
 import joblib
 import argparse
 import time
+import pickle
 import pandas as pd
 
 
@@ -39,68 +41,75 @@ import pandas as pd
 # model_type = args.model_type
 # distance_function = args.distance_function
 
-sigma_val = 4.0
-temperature_val = 2.0
-distance_weight_val = 0.005
-lr = 0.001
-opt = "adam"
-num_iter = 10
-distance_function = "mahal"
+def main():
+    model_algo = "ab"
+    sigma_val = 5.0
+    temperature_val = 10.0
+    distance_weight_val = 0.05
+    lr = 0.005
+    opt = "adam"
+    num_iter = 1000
+    distance_function = "l1"
+    # "mahal"cosine"euclidean
 
-model_name = "model_dt_cf_compas_num_depth4"
-data_name = "cf_compas_num_data_test.tsv"
-model_type = "ss"
+    data_name = "cf_compas_num_data_test"
+    model_type = "ss"
 
-start_time = time.time()
-# had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
-model = joblib.load("models/{}".format(model_name), "rb")
+    start_time = time.time()
 
-df = pd.read_csv("data/{}".format(data_name), sep="\t", index_col=0)
-feat_columns = df.columns
-feat_matrix = df.values.astype(float)
+    df = pd.read_csv("data/{}.tsv".format(data_name), sep="\t", index_col=0)
+    feat_columns = df.columns
+    feat_matrix = df.values.astype(float)
 
-# Remove the last column which is the label
-feat_input = feat_matrix[:, :-1]
+    feat_input = feat_matrix[:, :-1]
 
-# Include training data to compute covariance matrix for Mahalanobis distance
-# sort this when refactoring the inputs
-train_name = data_name.replace("test", "train")
-train_data = pd.read_csv("data/{}".format(train_name), sep="\t", index_col=0)
-x_train = np.array(train_data.iloc[:, :-1])
+    # Include training data to compute covariance matrix for Mahalanobis distance
+    # sort this when refactoring the inputs
+    train_name = data_name.replace("test", "train")
+    train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
+    x_train = np.array(train_data.iloc[:, :-1])
 
-output_root = (
-    "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
-        distance_function,
-        data_name,
-        model_type,
-        opt,
+    # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
+    # model = joblib.load("models/{}".format(model_name), "rb")
+    model = pickle.load(open("my_models/" + model_algo + "_" + train_name + ".pkl", 'rb'))
+
+    output_root = (
+        "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
+            distance_function,
+            data_name,
+            model_type,
+            opt,
+            sigma_val,
+            temperature_val,
+            distance_weight_val,
+            lr,
+        )
+    )
+
+    unchanged_ever, counterfactual_examples, best_distance, best_perturb = fit(
+        model,
+        feat_input,
         sigma_val,
         temperature_val,
         distance_weight_val,
+        distance_function,
+        opt,
         lr,
+        num_iter=num_iter,
+        x_train=x_train,
+        verbose=1,)
+
+    # Evaluation
+    generate_cf_stats(
+        output_root, data_name, distance_function, unchanged_ever, counterfactual_examples
     )
-)
+    # df_perturb = generate_perturb_df(best_distance, best_perturb, feat_columns)
+    # df = generate_perturbed_df(best_perturb, feat_input)
+    # plot_pertubed(df_perturb)
+    end_time = time.time()
 
-unchanged_ever, counterfactual_examples, best_distance, best_perturb = fit(
-    model,
-    feat_input,
-    sigma_val,
-    temperature_val,
-    distance_weight_val,
-    distance_function,
-    opt,
-    lr,
-    num_iter=10,
-    x_train=x_train,
-    verbose=1,)
+    print("Finished!! ~{} sec".format(np.round(end_time - start_time)))
 
-# Evaluation
-generate_cf_stats(
-    output_root, data_name, distance_function, unchanged_ever, counterfactual_examples
-)
-df_perturb = generate_perturbed_df(best_distance, best_perturb, feat_columns)
-df_diff = generate_perturbed_df_diff(best_perturb, feat_input)
 
-end_time = time.time()
-
-print("Finished!! ~{} sec".format(np.round(end_time - start_time)))
+if __name__ == "__main__":
+    main()
