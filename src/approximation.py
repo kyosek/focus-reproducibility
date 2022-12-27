@@ -18,7 +18,7 @@ def _parse_class_tree(tree, feat_input, sigma: float):
     nodes = [None] * n_nodes
     leaf_nodes = [[] for _ in range(len(tree.classes_))]
 
-    node_depth = np.zeros(shape=n_nodes, dtype=np.int64)
+    node_depth = np.zeros(shape=n_nodes, dtype=np.int32)
     is_leaves = np.zeros(shape=n_nodes, dtype=bool)
     stack = [(0, 0)]  # start with the root node id (0) and its depth (0)
 
@@ -82,10 +82,10 @@ def get_prob_classification_tree(tree, feat_input, sigma: float):
         )  # can differ depending on particular samples used to train each tree
 
         correct_class = tf.constant(
-            1, shape=(len(feat_input)), dtype=tf.float64
+            1, shape=(len(feat_input)), dtype=tf.float32
         )  # prob(belong to correct class) = 100 since there's only one node
         incorrect_class = tf.constant(
-            0, shape=(len(feat_input)), dtype=tf.float64
+            0, shape=(len(feat_input)), dtype=tf.float32
         )  # prob(wrong class) = 0
         if only_class == 1.0:
             class_0 = incorrect_class
@@ -158,7 +158,7 @@ def fit(
     for i, class_name in enumerate(model.classes_):
         mask = np.equal(predictions, class_name)
         class_index[mask] = i
-    class_index = tf.constant(class_index, dtype=tf.int64)
+    class_index = tf.constant(class_index, dtype=tf.int32)
     example_range = tf.constant(np.arange(n_examples, dtype=int))
     example_class_index = tf.stack((example_range, class_index), axis=1)
 
@@ -195,7 +195,6 @@ def fit(
             optimizer.apply_gradients(
                 zip(grad, to_optimize),
             )
-            # Make sure perturbed values are between 0 and 1 (inclusive)
             perturbed.assign(tf.math.minimum(1, tf.math.maximum(0, perturbed)))
 
             true_distance = calculate_distance(
@@ -203,7 +202,7 @@ def fit(
             )
 
             cur_predict = model.predict(perturbed.numpy())
-            indicator = np.equal(predictions, cur_predict).astype(np.float64)
+            indicator = np.equal(predictions, cur_predict).astype(np.float32)
             idx_flipped = np.argwhere(indicator == 0).flatten()
 
             # get the best perturbation so far
@@ -227,6 +226,6 @@ def fit(
             best_perturb[mask_smaller_dist] = temp_perturb[mask_smaller_dist]
 
             unchanged_ever = best_distance[best_distance == 1000.0]
-            counterfactual_examples = best_distance[best_distance != 1000.0]
+            cf_distance = best_distance[best_distance != 1000.0]
 
-        return unchanged_ever, counterfactual_examples, best_distance, best_perturb
+        return unchanged_ever, cf_distance, best_distance, best_perturb
