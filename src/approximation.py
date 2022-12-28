@@ -126,14 +126,14 @@ def get_prob_classification_forest(
     return softmax
 
 
-def fit(
+def compute_cfe(
     model,
     feat_input,
+    distance_function,
+    opt,
     sigma_val,
     temperature_val,
     distance_weight_val,
-    distance_function,
-    opt,
     lr,
     num_iter=100,
     x_train=None,
