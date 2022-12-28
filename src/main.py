@@ -5,7 +5,7 @@ from evaluate import (
     generate_cf_stats,
     plot_pertubed,
 )
-from approximation import fit
+from approximation import compute_cfe
 import joblib
 import argparse
 import time
@@ -41,8 +41,9 @@ import pandas as pd
 # model_type = args.model_type
 # distance_function = args.distance_function
 
+
 def main():
-    model_algo = "ab"
+    model_algo = "dt"
     sigma_val = 5.0
     temperature_val = 10.0
     distance_weight_val = 0.05
@@ -71,22 +72,22 @@ def main():
 
     # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
     # model = joblib.load("models/{}".format(model_name), "rb")
-    model = pickle.load(open("my_models/" + model_algo + "_" + train_name + ".pkl", 'rb'))
-
-    output_root = (
-        "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
-            distance_function,
-            data_name,
-            model_type,
-            opt,
-            sigma_val,
-            temperature_val,
-            distance_weight_val,
-            lr,
-        )
+    model = pickle.load(
+        open("my_models/" + model_algo + "_" + train_name + ".pkl", "rb")
     )
 
-    unchanged_ever, cf_distance, best_distance, best_perturb = fit(
+    output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
+        distance_function,
+        data_name,
+        model_type,
+        opt,
+        sigma_val,
+        temperature_val,
+        distance_weight_val,
+        lr,
+    )
+
+    unchanged_ever, counterfactual_examples, best_distance, best_perturb = compute_cfe(
         model,
         feat_input,
         sigma_val,
@@ -97,11 +98,17 @@ def main():
         lr,
         num_iter=num_iter,
         x_train=x_train,
-        verbose=1,)
+        verbose=1,
+    )
 
     # Evaluation
     generate_cf_stats(
-        output_root, data_name, distance_function, unchanged_ever, cf_distance
+        output_root,
+        data_name,
+        distance_function,
+        unchanged_ever,
+        counterfactual_examples,
+
     )
     # df_perturb = generate_perturb_df(best_distance, best_perturb, feat_columns)
     # df = generate_perturbed_df(best_perturb, feat_input)

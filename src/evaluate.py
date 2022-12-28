@@ -26,7 +26,9 @@ def generate_cf_stats(
 
 
 def generate_perturb_df(best_distance, best_perturb, feat_columns):
-    df_dist = pd.DataFrame({"id": range(len(best_distance)), "best_distance": best_distance})
+    df_dist = pd.DataFrame(
+        {"id": range(len(best_distance)), "best_distance": best_distance}
+    )
     df_perturb = pd.DataFrame(best_perturb, columns=feat_columns[:-1])
     return pd.concat([df_dist, df_perturb], axis=1)
 
@@ -37,5 +39,7 @@ def generate_perturbed_df(df_perturb, feat_input):
 
 def plot_pertubed(df_perturb: pd.DataFrame):
     f, ax = plt.subplots(figsize=(3, 7))
-    sns.barplot(x=np.mean(df_perturb.iloc[:, 2:], axis=0), y=df_perturb.iloc[:, 2:].columns)
+    sns.barplot(
+        x=np.mean(df_perturb.iloc[:, 2:], axis=0), y=df_perturb.iloc[:, 2:].columns
+    )
     ax.set(xlabel="Average pertubation per column")
