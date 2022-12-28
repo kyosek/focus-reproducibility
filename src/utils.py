@@ -53,7 +53,7 @@ def safe_cosine(x1, x2, epsilon=10.0 ** -10):
     dist = cosine_loss(normalize_x1, normalize_x2) + 1 + epsilon
 
     dist = tf.squeeze(dist)
-    dist = tf.cast(dist, tf.float64)
+    dist = tf.cast(dist, tf.float32)
     return dist
 
 
@@ -67,7 +67,7 @@ def true_cosine(x1: object, x2: object) -> object:
     dist = cosine_loss(normalize_x1, normalize_x2) + 1
 
     dist = tf.squeeze(dist)
-    dist = tf.cast(dist, tf.float64)
+    dist = tf.cast(dist, tf.float32)
     return dist
 
 
@@ -82,7 +82,7 @@ def true_l1(x, axis=1):
 def tf_cov(x):
     mean_x = tf.reduce_mean(x, axis=0, keepdims=True)
     mx = tf.matmul(tf.transpose(mean_x), mean_x)
-    vx = tf.matmul(tf.transpose(x), x) / tf.cast(tf.shape(x)[0], tf.float64)
+    vx = tf.matmul(tf.transpose(x), x) / tf.cast(tf.shape(x)[0], tf.float32)
     cov_xx = vx - mx
     return cov_xx
 
@@ -95,8 +95,10 @@ def safe_mahal(x_test, x_train, epsilon=10.0 ** -10):
     )
 
 
-def true_mahal(x, inv_covar):
-    return tf.reduce_sum(tf.multiply(tf.matmul(x, inv_covar), x), axis=1)
+def true_mahal(x_test, x_train):
+    covar = tf_cov(x_train)
+    inv_covar = tf.linalg.inv(covar)
+    return tf.reduce_sum(tf.multiply(tf.matmul(x_test, inv_covar), x_test), axis=1)
 
 
 def mkdir_p(path):
@@ -117,14 +119,26 @@ def safe_open(path, w):
 
 def calculate_distance(distance_function: str, perturbed, feat_input, x_train=None):
     if distance_function == "euclidean":
-        return safe_euclidean(perturbed - feat_input, axis=1)
+        try:
+            true_euclidean(perturbed - feat_input, axis=1)
+        except ValueError:
+            safe_euclidean(perturbed - feat_input, axis=1)
     elif distance_function == "cosine":
-        return safe_cosine(perturbed, feat_input)
+        try:
+            true_cosine(perturbed, feat_input)
+        except ValueError:
+            safe_cosine(perturbed, feat_input)
     elif distance_function == "l1":
-        return safe_l1(perturbed - feat_input)
+        try:
+            true_l1(perturbed - feat_input)
+        except ValueError:
+            safe_l1(perturbed - feat_input)
     elif distance_function == "mahal":
         try:
             x_train.any()
-            return safe_mahal(perturbed - feat_input, x_train)
+            try:
+                true_mahal(perturbed - feat_input, x_train)
+            except ValueError:
+                safe_mahal(perturbed - feat_input, x_train)
         except ValueError:
             print("x_train is empty")
