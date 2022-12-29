@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import optuna
-import tensorflow as tf
 from approximation import compute_cfe
 import time
 import pickle
@@ -14,7 +13,7 @@ def objective(trial):
     distance_function = "mahal"
     # "mahal"cosine"euclidean"l1
 
-    data_name = "cf_wine_data_test"
+    data_name = "cf_shop2_data_test"
 
     df = pd.read_csv("data/{}.tsv".format(data_name), sep="\t", index_col=0)
     feat_matrix = df.values.astype(float)
