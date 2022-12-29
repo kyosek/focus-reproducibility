@@ -49,7 +49,7 @@ def main():
     distance_weight_val = 0.05
     lr = 0.005
     opt = "adam"
-    num_iter = 10
+    num_iter = 100
     distance_function = "l1"
     # "mahal"cosine"euclidean
 
@@ -108,6 +108,7 @@ def main():
         distance_function,
         unchanged_ever,
         counterfactual_examples,
+
     )
     # df_perturb = generate_perturb_df(best_distance, best_perturb, feat_columns)
     # df = generate_perturbed_df(best_perturb, feat_input)
