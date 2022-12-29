@@ -9,16 +9,12 @@ import pickle
 
 def objective(trial):
     model_algo = "dt"
-    # sigma_val = 5.0
-    # temperature_val = 10.0
-    # distance_weight_val = 0.05
-    # lr = 0.005
     opt = "adam"
     num_iter = 1000
     distance_function = "mahal"
     # "mahal"cosine"euclidean"l1
 
-    data_name = "cf_compas_num_data_test"
+    data_name = "cf_wine_data_test"
 
     df = pd.read_csv("data/{}.tsv".format(data_name), sep="\t", index_col=0)
     feat_matrix = df.values.astype(float)
@@ -42,19 +38,22 @@ def objective(trial):
         opt,
         sigma_val=trial.suggest_int("sigma", 1, 20),
         temperature_val=trial.suggest_int("temperature", 1, 20),
-        distance_weight_val=round(trial.suggest_float("distance_weight", 0.01, 0.1), 2),
-        lr=round(trial.suggest_float("learning_rate", 0.001, 0.05), 3),
+        distance_weight_val=round(trial.suggest_float("distance_weight", 0.01, 0.1, step=0.01), 2),
+        lr=round(trial.suggest_float("learning_rate", 0.001, 0.1, step=0.001), 3),
         num_iter=num_iter,
         x_train=x_train,
         verbose=0,
     )
 
-    return np.mean(counterfactual_examples) * len(unchanged_ever) ** 2
+    print(f"Unchanged: {len(unchanged_ever)}")
+    print(f"Mean distance: {np.mean(counterfactual_examples)}")
+
+    return np.mean(counterfactual_examples) * (len(unchanged_ever) ** 2)
 
 
 if __name__ == "__main__":
-    study = optuna.create_study(directions=["minimize", "minimize"])
-    study.optimize(objective, n_trials=100, timeout=6000)
+    study = optuna.create_study(direction="minimize")
+    study.optimize(objective, n_trials=100)
 
     print(f"Number of finished trials: {len(study.trials)}")
 
