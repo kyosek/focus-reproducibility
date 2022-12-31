@@ -53,7 +53,7 @@ def safe_cosine(x1, x2, epsilon=10.0 ** -10):
     dist = cosine_loss(normalize_x1, normalize_x2) + 1 + epsilon
 
     dist = tf.squeeze(dist)
-    dist = tf.cast(dist, tf.float64)
+    dist = tf.cast(dist, tf.float32)
     return dist
 
 
@@ -67,7 +67,7 @@ def true_cosine(x1: object, x2: object) -> object:
     dist = cosine_loss(normalize_x1, normalize_x2) + 1
 
     dist = tf.squeeze(dist)
-    dist = tf.cast(dist, tf.float64)
+    dist = tf.cast(dist, tf.float32)
     return dist
 
 

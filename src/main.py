@@ -65,7 +65,6 @@ def main():
     feat_input = feat_matrix[:, :-1]
 
     # Include training data to compute covariance matrix for Mahalanobis distance
-    # sort this when refactoring the inputs
     train_name = data_name.replace("test", "train")
     train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
     x_train = np.array(train_data.iloc[:, :-1])
@@ -87,7 +86,7 @@ def main():
         lr,
     )
 
-    unchanged_ever, counterfactual_examples, best_distance, best_perturb = compute_cfe(
+    unchanged_ever, cfe_distance, best_distance, best_perturb = compute_cfe(
         model,
         feat_input,
         sigma_val,
@@ -107,7 +106,7 @@ def main():
         data_name,
         distance_function,
         unchanged_ever,
-        counterfactual_examples,
+        cfe_distance,
     )
     # df_perturb = generate_perturb_df(best_distance, best_perturb, feat_columns)
     # df = generate_perturbed_df(best_perturb, feat_input)

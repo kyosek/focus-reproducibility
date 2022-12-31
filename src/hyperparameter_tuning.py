@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import optuna
 from approximation import compute_cfe
-import time
 import pickle
 
 
@@ -47,7 +46,7 @@ def objective(trial):
     print(f"Unchanged: {len(unchanged_ever)}")
     print(f"Mean distance: {np.mean(counterfactual_examples)}")
 
-    return np.mean(counterfactual_examples) * (len(unchanged_ever) ** 2)
+    return np.mean(counterfactual_examples) + (len(unchanged_ever) ** 2)
 
 
 if __name__ == "__main__":
