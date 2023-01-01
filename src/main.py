@@ -50,7 +50,7 @@ def main():
     lr = 0.005
     opt = "adam"
     num_iter = 10
-    distance_function = "l1"
+    distance_function = "euclidean"
     # "mahal"cosine"euclidean
 
     data_name = "cf_compas_num_data_test"
@@ -89,11 +89,11 @@ def main():
     unchanged_ever, cfe_distance, best_distance, best_perturb = compute_cfe(
         model,
         feat_input,
+        distance_function,
+        opt,
         sigma_val,
         temperature_val,
         distance_weight_val,
-        distance_function,
-        opt,
         lr,
         num_iter=num_iter,
         x_train=x_train,

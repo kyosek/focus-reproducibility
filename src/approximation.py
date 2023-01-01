@@ -4,7 +4,7 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from src.utils import filter_hinge_loss, calculate_distance
 
 
-def _parse_class_tree(tree, feat_input, sigma: float):
+def _parse_class_tree(tree, feat_input, sigma: float) -> list:
     """
     This function traverses the tree structure to compute impurity of each node and
     use sigmoid function to approximate them.
@@ -60,7 +60,10 @@ def _parse_class_tree(tree, feat_input, sigma: float):
     return leaf_nodes
 
 
-def get_prob_classification_tree(tree, feat_input, sigma: float):
+def get_prob_classification_tree(tree, feat_input, sigma: float) -> tf.Tensor:
+    """
+    This function takes approximated leaf_nodes' impurity and return each data points' probability
+    """
 
     leaf_nodes = _parse_class_tree(tree, feat_input, sigma)
 
@@ -101,7 +104,10 @@ def get_prob_classification_tree(tree, feat_input, sigma: float):
 
 def get_prob_classification_forest(
     model, feat_input: tf.Tensor, sigma: float, temperature: float
-):
+) -> tf.Tensor:
+    """
+    This function takes decision tree node's probabilities of each data point and calculate softmax
+    """
     dt_prob_list = [
         get_prob_classification_tree(estimator, feat_input, sigma)
         for estimator in model.estimators_
@@ -112,7 +118,7 @@ def get_prob_classification_forest(
     elif isinstance(model, RandomForestClassifier):
         weights = np.full(len(model.estimators_), 1 / len(model.estimators_))
 
-    logits = sum(w * tree for w, tree in zip(weights, dt_prob_list))
+    logits = sum(weight * tree for weight, tree in zip(weights, dt_prob_list))
 
     temperature = np.full(len(feat_input), temperature)
     if type(temperature) in [float, int]:
