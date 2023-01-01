@@ -1,7 +1,9 @@
+import numpy as np
 import pickle
 import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 
 
 def train_model(
@@ -11,7 +13,7 @@ def train_model(
     feat_matrix = df.values.astype(float)
 
     x_train = feat_matrix[:, :-1]
-    y_train = feat_matrix[:, -1]
+    y_train = np.where(feat_matrix[:, -1] == -1, 0, 1)
 
     if model_type == "dt":
         model = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
@@ -27,6 +29,8 @@ def train_model(
             learning_rate=lr,
             random_state=42,
         )
+    elif model_type == "lgb":
+        model = XGBClassifier(max_depth=max_depth, random_state=42)
 
     model.fit(x_train, y_train)
     pickle.dump(model, open("my_models/" + model_type + "_" + data_name + ".pkl", "wb"))
@@ -35,7 +39,7 @@ def train_model(
 
 if __name__ == "__main__":
     train_model(
-        model_type="dt",
+        model_type="lgb",
         data_name="cf_wine_data_train",
-        max_depth=2,
+        max_depth=4,
     )

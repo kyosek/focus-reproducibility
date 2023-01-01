@@ -43,7 +43,7 @@ import pandas as pd
 
 
 def main():
-    model_algo = "dt"
+    model_algo = "rf"
     sigma_val = 5.0
     temperature_val = 10.0
     distance_weight_val = 0.05

@@ -5,13 +5,15 @@ from src.utils import filter_hinge_loss, calculate_distance
 
 
 def _parse_class_tree(tree, feat_input, sigma: float):
+    """
+    This function traverses the tree structure to compute impurity of each node and
+    use sigmoid function to approximate them.
+    """
     # Code is adapted from https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html
     n_nodes = tree.tree_.node_count
     children_left = tree.tree_.children_left
     children_right = tree.tree_.children_right
-    # feature returns the nodes/leaves in a sequential order as a DFS
     feature = tree.tree_.feature
-    # threshold for impurity
     threshold = tree.tree_.threshold
     values = tree.tree_.value
 
@@ -20,15 +22,13 @@ def _parse_class_tree(tree, feat_input, sigma: float):
 
     node_depth = np.zeros(shape=n_nodes, dtype=np.int32)
     is_leaves = np.zeros(shape=n_nodes, dtype=bool)
-    stack = [(0, 0)]  # start with the root node id (0) and its depth (0)
+    stack = [(0, 0)]
 
     while len(stack) > 0:
         node_id, depth = stack.pop()
         node_depth[node_id] = depth
 
         is_split_node = children_left[node_id] != children_right[node_id]
-        # If a split node, append left and right children and depth to `stack`
-        # so we can loop through them
         if is_split_node:
             stack.append((children_left[node_id], depth + 1))
             stack.append((children_right[node_id], depth + 1))
@@ -37,7 +37,6 @@ def _parse_class_tree(tree, feat_input, sigma: float):
 
     for i in range(n_nodes):
         cur_node = nodes[i]
-        #  If a split node, get nodes updated
         if children_left[i] != children_right[i]:
 
             if cur_node is None:
@@ -195,7 +194,6 @@ def compute_cfe(
             optimizer.apply_gradients(
                 zip(grad, to_optimize),
             )
-            # Make sure perturbed values are between 0 and 1 (inclusive)
             perturbed.assign(tf.math.minimum(1, tf.math.maximum(0, perturbed)))
 
             true_distance = calculate_distance(
@@ -216,7 +214,7 @@ def compute_cfe(
             distance_numpy = true_distance.numpy()
             mask_smaller_dist = np.less(
                 distance_numpy, best_distance
-            )  # is dist < previous best dist?
+            )
 
             temp_dist = best_distance.copy()
             temp_dist[mask_flipped] = distance_numpy[mask_flipped]

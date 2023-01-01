@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-import approximation
+from src import approximation
 from sklearn.tree import DecisionTreeClassifier
 import os
 import errno

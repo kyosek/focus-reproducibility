@@ -14,3 +14,6 @@ WARNING(pigar): some manual fixes are required since pigar has found duplicate r
 # WARNING(pigar): the following duplicate requirements are for import name: evaluate
 # WARNING(pigar): the following duplicate requirements are for import name: os
 # WARNING(pigar): the following duplicate requirements are for import name: utils
+
+sklearn~=0.0.post1
+pytest~=7.2.0
