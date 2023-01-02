@@ -3,7 +3,6 @@ import pickle
 import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
-from xgboost import XGBClassifier
 
 
 def train_model(
