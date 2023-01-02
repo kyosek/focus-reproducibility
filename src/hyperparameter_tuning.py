@@ -36,7 +36,9 @@ def objective(trial):
         opt,
         sigma_val=trial.suggest_int("sigma", 1, 20),
         temperature_val=trial.suggest_int("temperature", 1, 20),
-        distance_weight_val=round(trial.suggest_float("distance_weight", 0.01, 0.1, step=0.01), 2),
+        distance_weight_val=round(
+            trial.suggest_float("distance_weight", 0.01, 0.1, step=0.01), 2
+        ),
         lr=round(trial.suggest_float("learning_rate", 0.001, 0.1, step=0.001), 3),
         num_iter=num_iter,
         x_train=x_train,

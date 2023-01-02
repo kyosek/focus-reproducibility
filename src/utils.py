@@ -11,7 +11,7 @@ def filter_hinge_loss(
     n_class, mask_vector, feat_input, sigma, temperature, model
 ) -> tf.Tensor:
     """
-    Return hinge loss from input features?
+    This function takes each data point's probability/softmax from the model and return filtered probabilities
     """
     n_input = feat_input.shape[0]
 
@@ -95,8 +95,10 @@ def safe_mahal(x_test, x_train, epsilon=10.0 ** -10):
     )
 
 
-def true_mahal(x, inv_covar):
-    return tf.reduce_sum(tf.multiply(tf.matmul(x, inv_covar), x), axis=1)
+def true_mahal(x_test, x_train):
+    covar = tf_cov(x_train)
+    inv_covar = tf.linalg.inv(covar)
+    return tf.reduce_sum(tf.multiply(tf.matmul(x_test, inv_covar), x_test), axis=1)
 
 
 def mkdir_p(path):

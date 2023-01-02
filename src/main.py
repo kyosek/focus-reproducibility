@@ -50,7 +50,7 @@ def main():
     lr = 0.005
     opt = "adam"
     num_iter = 10
-    distance_function = "euclidean"
+    distance_function = "mahal"
     # "mahal"cosine"euclidean
 
     data_name = "cf_compas_num_data_test"

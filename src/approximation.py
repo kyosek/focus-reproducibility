@@ -218,9 +218,7 @@ def compute_cfe(
             )
 
             distance_numpy = true_distance.numpy()
-            mask_smaller_dist = np.less(
-                distance_numpy, best_distance
-            )
+            mask_smaller_dist = np.less(distance_numpy, best_distance)
 
             temp_dist = best_distance.copy()
             temp_dist[mask_flipped] = distance_numpy[mask_flipped]

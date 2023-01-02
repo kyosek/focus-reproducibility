@@ -3,18 +3,18 @@ import numpy as np
 import pandas as pd
 import pickle
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-# from src.utils import filter_hinge_loss, calculate_distance
-from src.approximation import _parse_class_tree, get_prob_classification_tree, get_prob_classification_forest, compute_cfe
 
-dt_model = pickle.load(
-        open("my_models/dt_cf_compas_num_data_train.pkl", "rb")
-    )
-rf_model = pickle.load(
-        open("my_models/rf_cf_compas_num_data_train.pkl", "rb")
-    )
-ab_model = pickle.load(
-        open("my_models/ab_cf_compas_num_data_train.pkl", "rb")
-    )
+# from src.utils import filter_hinge_loss, calculate_distance
+from src.approximation import (
+    _parse_class_tree,
+    get_prob_classification_tree,
+    get_prob_classification_forest,
+    compute_cfe,
+)
+
+dt_model = pickle.load(open("my_models/dt_cf_compas_num_data_train.pkl", "rb"))
+rf_model = pickle.load(open("my_models/rf_cf_compas_num_data_train.pkl", "rb"))
+ab_model = pickle.load(open("my_models/ab_cf_compas_num_data_train.pkl", "rb"))
 df = pd.read_csv("data/cf_compas_num_data_test.tsv", sep="\t", index_col=0)
 feat_input = df.values.astype(float)[:, :-1]
 sigma = 5.0
@@ -37,8 +37,8 @@ def test_get_prob_classification_tree():
 
 def test_get_prob_classification_forest():
     rf_softmax = get_prob_classification_forest(
-            rf_model, feat_input, sigma=sigma, temperature=temperature
-        )
+        rf_model, feat_input, sigma=sigma, temperature=temperature
+    )
     ab_softmax = get_prob_classification_forest(
         rf_model, feat_input, sigma=sigma, temperature=temperature
     )
