@@ -70,7 +70,7 @@ def main():
     x_train = np.array(train_data.iloc[:, :-1])
 
     # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
-    # model = joblib.load("models/{}".format(model_name), "rb")
+    # model = joblib.load("models/model_dt_cf_compas_num_depth4", "rb")
     model = pickle.load(
         open("my_models/" + model_algo + "_" + train_name + ".pkl", "rb")
     )
