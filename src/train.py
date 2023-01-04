@@ -28,8 +28,6 @@ def train_model(
             learning_rate=lr,
             random_state=42,
         )
-    elif model_type == "lgb":
-        model = XGBClassifier(max_depth=max_depth, random_state=42)
 
     model.fit(x_train, y_train)
     pickle.dump(model, open("my_models/" + model_type + "_" + data_name + ".pkl", "wb"))
@@ -38,7 +36,7 @@ def train_model(
 
 if __name__ == "__main__":
     train_model(
-        model_type="lgb",
-        data_name="cf_wine_data_train",
+        model_type="dt",
+        data_name="cf_german_train",
         max_depth=4,
     )
