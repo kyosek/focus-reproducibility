@@ -1,38 +1,6 @@
 import tensorflow as tf
-import numpy as np
-
-from src import approximation
-from sklearn.tree import DecisionTreeClassifier
 import os
 import errno
-
-
-def filter_hinge_loss(
-    n_class, mask_vector, feat_input, sigma, temperature, model
-) -> tf.Tensor:
-    """
-    This function takes each data point's probability/softmax from the model and return filtered probabilities
-    """
-    n_input = feat_input.shape[0]
-
-    filtered_input = tf.boolean_mask(feat_input, mask_vector)
-
-    if not isinstance(model, DecisionTreeClassifier):
-        filtered_loss = approximation.get_prob_classification_forest(
-            model, filtered_input, sigma=sigma, temperature=temperature
-        )
-    elif isinstance(model, DecisionTreeClassifier):
-        filtered_loss = approximation.get_prob_classification_tree(
-            model, filtered_input, sigma
-        )
-
-    indices = np.where(mask_vector)[0]
-    hinge_loss = tf.tensor_scatter_nd_add(
-        np.zeros((n_input, n_class)),
-        indices[:, None],
-        filtered_loss,
-    )
-    return hinge_loss
 
 
 def safe_euclidean(x, epsilon=10.0 ** -10, axis=-1):
