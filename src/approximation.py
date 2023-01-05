@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from src.utils import filter_hinge_loss, calculate_distance
+from sklearn.tree import DecisionTreeClassifier
+from src.utils import calculate_distance
 
 
 def _parse_class_tree(tree, feat_input, sigma: float) -> list:
@@ -129,6 +130,34 @@ def get_prob_classification_forest(
     softmax = expits / tf.reduce_sum(expits, axis=1)[:, None]
 
     return softmax
+
+
+def filter_hinge_loss(
+    n_class, mask_vector, feat_input, sigma, temperature, model
+) -> tf.Tensor:
+    """
+    This function takes each data point's probability/softmax from the model and return filtered probabilities
+    """
+    n_input = feat_input.shape[0]
+
+    filtered_input = tf.boolean_mask(feat_input, mask_vector)
+
+    if not isinstance(model, DecisionTreeClassifier):
+        filtered_loss = get_prob_classification_forest(
+            model, filtered_input, sigma=sigma, temperature=temperature
+        )
+    elif isinstance(model, DecisionTreeClassifier):
+        filtered_loss = get_prob_classification_tree(
+            model, filtered_input, sigma
+        )
+
+    indices = np.where(mask_vector)[0]
+    hinge_loss = tf.tensor_scatter_nd_add(
+        np.zeros((n_input, n_class)),
+        indices[:, None],
+        filtered_loss,
+    )
+    return hinge_loss
 
 
 def compute_cfe(

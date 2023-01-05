@@ -1,4 +1,4 @@
-import utils
+from src.utils import safe_open
 import numpy as np
 import pandas as pd
 import json
@@ -21,7 +21,7 @@ def generate_cf_stats(
     }
 
     print("saving the text file")
-    with utils.safe_open(output_root + "_cf_stats.txt", "w") as gsout:
+    with safe_open(output_root + "_cf_stats.txt", "w") as gsout:
         json.dump(cf_stats, gsout)
 
 
@@ -37,7 +37,7 @@ def generate_perturbed_df(df_perturb, feat_input):
     return pd.DataFrame(df_perturb + feat_input)
 
 
-def plot_pertubed(df_perturb: pd.DataFrame):
+def plot_perturbed(df_perturb: pd.DataFrame):
     f, ax = plt.subplots(figsize=(3, 7))
     sns.barplot(
         x=np.mean(df_perturb.iloc[:, 2:], axis=0), y=df_perturb.iloc[:, 2:].columns

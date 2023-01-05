@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import optuna
-from approximation import compute_cfe
+from src.approximation import compute_cfe
 import pickle
 
 

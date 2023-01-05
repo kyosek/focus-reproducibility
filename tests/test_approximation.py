@@ -1,14 +1,12 @@
-import tensorflow as tf
 import numpy as np
 import pandas as pd
 import pickle
-from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
-# from src.utils import filter_hinge_loss, calculate_distance
 from src.approximation import (
     _parse_class_tree,
     get_prob_classification_tree,
     get_prob_classification_forest,
+    filter_hinge_loss,
     compute_cfe,
 )
 
@@ -19,6 +17,7 @@ df = pd.read_csv("data/cf_compas_num_data_test.tsv", sep="\t", index_col=0)
 feat_input = df.values.astype(float)[:, :-1]
 sigma = 5.0
 temperature = 10.0
+indicator = np.zeros(len(df))
 
 
 def test__parse_class_tree():
@@ -45,6 +44,37 @@ def test_get_prob_classification_forest():
 
     assert rf_softmax.shape == (1852, 2)
     assert ab_softmax.shape == (1852, 2)
+
+
+def test_filter_hinge_loss():
+    dt_hinge_loss = filter_hinge_loss(
+        len(dt_model.classes_),
+        indicator,
+        feat_input,
+        sigma,
+        temperature,
+        dt_model,
+    )
+    rf_hinge_loss = filter_hinge_loss(
+        len(dt_model.classes_),
+        indicator,
+        feat_input,
+        sigma,
+        temperature,
+        rf_model,
+    )
+    ab_hinge_loss = filter_hinge_loss(
+        len(dt_model.classes_),
+        indicator,
+        feat_input,
+        sigma,
+        temperature,
+        ab_model,
+    )
+
+    assert dt_hinge_loss.shape == (1852, 2)
+    assert rf_hinge_loss.shape == (1852, 2)
+    assert ab_hinge_loss.shape == (1852, 2)
 
 
 def test_compute_cfe():

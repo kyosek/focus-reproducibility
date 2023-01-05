@@ -1,13 +1,11 @@
 import numpy as np
-from evaluate import (
+from src.evaluate import (
     generate_perturb_df,
     generate_perturbed_df,
     generate_cf_stats,
-    plot_pertubed,
+    plot_perturbed,
 )
-from approximation import compute_cfe
-import joblib
-import argparse
+from src.approximation import compute_cfe
 import time
 import pickle
 import pandas as pd
@@ -43,7 +41,7 @@ import pandas as pd
 
 
 def main():
-    model_algo = "rf"
+    model_algo = "dt"
     sigma_val = 5.0
     temperature_val = 10.0
     distance_weight_val = 0.05
@@ -53,7 +51,7 @@ def main():
     distance_function = "mahal"
     # "mahal"cosine"euclidean
 
-    data_name = "cf_compas_num_data_test"
+    data_name = "cf_german_test"
     model_type = "ss"
 
     start_time = time.time()

@@ -1,9 +1,6 @@
-import pytest
-import numpy as np
 import pandas as pd
 import pickle
 from src.utils import (
-    filter_hinge_loss,
     safe_euclidean,
     true_euclidean,
     safe_cosine,
@@ -13,8 +10,6 @@ from src.utils import (
     safe_mahal,
     true_mahal,
     tf_cov,
-    safe_open,
-    mkdir_p,
     calculate_distance,
 )
 
@@ -25,38 +20,6 @@ df = pd.read_csv("data/cf_compas_num_data_test.tsv", sep="\t", index_col=0)
 feat_input = df.values.astype(float)[:, :-1]
 sigma = 5.0
 temperature = 10.0
-indicator = np.zeros(len(df))
-
-
-def test_filter_hinge_loss():
-    dt_hinge_loss = filter_hinge_loss(
-        len(dt_model.classes_),
-        indicator,
-        feat_input,
-        sigma,
-        temperature,
-        dt_model,
-    )
-    rf_hinge_loss = filter_hinge_loss(
-        len(dt_model.classes_),
-        indicator,
-        feat_input,
-        sigma,
-        temperature,
-        rf_model,
-    )
-    ab_hinge_loss = filter_hinge_loss(
-        len(dt_model.classes_),
-        indicator,
-        feat_input,
-        sigma,
-        temperature,
-        ab_model,
-    )
-
-    assert dt_hinge_loss.shape == (1852, 2)
-    assert rf_hinge_loss.shape == (1852, 2)
-    assert ab_hinge_loss.shape == (1852, 2)
 
 
 def test_safe_euclidean():
