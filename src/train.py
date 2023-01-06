@@ -36,7 +36,7 @@ def train_model(
 
 if __name__ == "__main__":
     train_model(
-        model_type="dt",
+        model_type="rf",
         data_name="cf_german_train",
         max_depth=4,
     )
