@@ -44,6 +44,6 @@ def train_model(
 if __name__ == "__main__":
     train_model(
         model_type="ab",
-        data_name="cf_heloc_data_train",
+        data_name="cf_wine_data_train",
         max_depth=4,
     )
