@@ -17,15 +17,22 @@ def train_model(
     if model_type == "dt":
         model = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
     elif model_type == "rf":
+        # model = RandomForestClassifier(
+        #     n_estimators=n_estimators, max_depth=max_depth, random_state=42
+        # )
         model = RandomForestClassifier(
-            n_estimators=n_estimators, max_depth=max_depth, random_state=42
+            n_estimators=100, max_depth=2, random_state=42
         )
     elif model_type == "ab":
-        dt = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
+        # dt = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
+        # model = AdaBoostClassifier(
+        #     base_estimator=dt,
+        #     n_estimators=n_estimators,
+        #     learning_rate=lr,
+        #     random_state=42,
+        # )
         model = AdaBoostClassifier(
-            base_estimator=dt,
-            n_estimators=n_estimators,
-            learning_rate=lr,
+            n_estimators=100,
             random_state=42,
         )
 
@@ -36,7 +43,7 @@ def train_model(
 
 if __name__ == "__main__":
     train_model(
-        model_type="rf",
-        data_name="cf_german_train",
+        model_type="ab",
+        data_name="cf_heloc_data_train",
         max_depth=4,
     )
