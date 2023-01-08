@@ -41,17 +41,17 @@ import pandas as pd
 
 
 def main():
-    model_algo = "dt"
+    model_algo = "ab"
     sigma_val = 5.0
     temperature_val = 10.0
-    distance_weight_val = 0.05
-    lr = 0.005
+    distance_weight_val = 0.01
+    lr = 0.001
     opt = "adam"
-    num_iter = 10
+    num_iter = 1000
     distance_function = "mahal"
     # "mahal"cosine"euclidean
 
-    data_name = "cf_german_test"
+    data_name = "cf_wine_data_test"
     model_type = "ss"
 
     start_time = time.time()
@@ -106,6 +106,9 @@ def main():
         unchanged_ever,
         cfe_distance,
     )
+
+    pd.DataFrame(cfe_distance).to_csv(f"cfe_{model_algo}_{train_name}.csv")
+
     # df_perturb = generate_perturb_df(best_distance, best_perturb, feat_columns)
     # df = generate_perturbed_df(best_perturb, feat_input)
     # plot_pertubed(df_perturb)
