@@ -41,17 +41,17 @@ import pandas as pd
 
 
 def main():
-    model_algo = "ab"
-    sigma_val = 5.0
-    temperature_val = 10.0
+    model_algo = "dt"
+    sigma_val = 4.0
+    temperature_val = 13.0
     distance_weight_val = 0.01
-    lr = 0.001
+    lr = 0.008
     opt = "adam"
     num_iter = 1000
     distance_function = "mahal"
     # "mahal"cosine"euclidean
 
-    data_name = "cf_wine_data_test"
+    data_name = "cf_compas_num_data_test"
     model_type = "ss"
 
     start_time = time.time()
@@ -70,7 +70,7 @@ def main():
     # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
     # model = joblib.load("models/model_dt_cf_compas_num_depth4", "rb")
     model = pickle.load(
-        open("my_models/" + model_algo + "_" + train_name + ".pkl", "rb")
+        open("my_models/" + model_algo + "_" + train_name + "_replication.pkl", "rb")
     )
 
     output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
@@ -84,7 +84,7 @@ def main():
         lr,
     )
 
-    unchanged_ever, cfe_distance, best_distance, best_perturb = compute_cfe(
+    unchanged_ever, cfe_distance, best_perturb = compute_cfe(
         model,
         feat_input,
         distance_function,

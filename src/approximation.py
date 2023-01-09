@@ -260,4 +260,4 @@ def compute_cfe(
             unchanged_ever = best_distance[best_distance == 1000.0]
             cfe_distance = best_distance[best_distance != 1000.0]
 
-        return unchanged_ever, cfe_distance, best_distance, best_perturb
+        return unchanged_ever, cfe_distance, best_perturb

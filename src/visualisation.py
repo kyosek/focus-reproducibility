@@ -6,6 +6,7 @@ import seaborn as sns
 def plot_cfe_dist_box(savefig=False):
     data_list = ["compas", "heloc", "shop2", "wine"]
     for data in data_list:
+        print(data)
         original_df = pd.read_csv(f"visualisation_data/original_cfe_dt_{data}.csv")
         original_df.columns = ["model", "cfe_distance"]
         original_df["model"] = "Original"
@@ -13,6 +14,15 @@ def plot_cfe_dist_box(savefig=False):
         new_df = pd.read_csv(f"visualisation_data/new_cfe_dt_{data}.csv")
         new_df.columns = ["model", "cfe_distance"]
         new_df["model"] = "New"
+
+        print("Mean - original")
+        print(original_df["cfe_distance"].mean())
+        print("Mean - new")
+        print(new_df["cfe_distance"].mean())
+        print("Median - original")
+        print(original_df["cfe_distance"].median())
+        print("Median - new")
+        print(new_df["cfe_distance"].median())
 
         df = pd.concat([original_df, new_df])
 

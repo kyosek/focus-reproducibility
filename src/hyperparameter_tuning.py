@@ -12,7 +12,7 @@ def objective(trial):
     distance_function = "mahal"
     # "mahal"cosine"euclidean"l1
 
-    data_name = "cf_shop2_data_test"
+    data_name = "cf_compas_num_data_test"
 
     df = pd.read_csv("data/{}.tsv".format(data_name), sep="\t", index_col=0)
     feat_matrix = df.values.astype(float)
@@ -26,10 +26,10 @@ def objective(trial):
     # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
     # model = joblib.load("models/{}".format(model_name), "rb")
     model = pickle.load(
-        open("my_models/" + model_algo + "_" + train_name + ".pkl", "rb")
+        open("my_models/" + model_algo + "_" + train_name + "_replication.pkl", "rb")
     )
 
-    unchanged_ever, counterfactual_examples, best_distance, best_perturb = compute_cfe(
+    unchanged_ever, counterfactual_examples, best_perturb = compute_cfe(
         model,
         feat_input,
         distance_function,
@@ -39,7 +39,7 @@ def objective(trial):
         distance_weight_val=round(
             trial.suggest_float("distance_weight", 0.01, 0.1, step=0.01), 2
         ),
-        lr=round(trial.suggest_float("learning_rate", 0.001, 0.1, step=0.001), 3),
+        lr=0.003,
         num_iter=num_iter,
         x_train=x_train,
         verbose=0,
@@ -48,7 +48,7 @@ def objective(trial):
     print(f"Unchanged: {len(unchanged_ever)}")
     print(f"Mean distance: {np.mean(counterfactual_examples)}")
 
-    return np.mean(counterfactual_examples) + (len(unchanged_ever) ** 2)
+    return np.mean(counterfactual_examples) + len(unchanged_ever)
 
 
 if __name__ == "__main__":
