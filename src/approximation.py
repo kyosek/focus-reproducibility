@@ -147,9 +147,7 @@ def filter_hinge_loss(
             model, filtered_input, sigma=sigma, temperature=temperature
         )
     elif isinstance(model, DecisionTreeClassifier):
-        filtered_loss = get_prob_classification_tree(
-            model, filtered_input, sigma
-        )
+        filtered_loss = get_prob_classification_tree(model, filtered_input, sigma)
 
     indices = np.where(mask_vector)[0]
     hinge_loss = tf.tensor_scatter_nd_add(
