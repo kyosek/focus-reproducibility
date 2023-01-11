@@ -68,7 +68,7 @@ def data_modification():
 
     # 4. Split train and test data
     train_df, test_df = train_test_split(df, test_size=0.3, random_state=42)
-    train_df, test_df = train_df.reset_index(), test_df.reset_index()
+    train_df, test_df = train_df.reset_index(drop=True), test_df.reset_index(drop=True)
 
     ohe_train_df = pd.DataFrame(
         ohe.fit_transform(train_df[cat_cols]).toarray(),
@@ -81,21 +81,23 @@ def data_modification():
     train_df, test_df = train_df.drop(labels=cat_cols, axis=1), test_df.drop(
         labels=cat_cols, axis=1
     )
-    train_df, test_df = pd.concat([train_df, ohe_train_df], axis=1), pd.concat(
-        [test_df, ohe_test_df], axis=1
-    )
+    # train_df, test_df = pd.concat([train_df, ohe_train_df], axis=1), pd.concat(
+    #     [test_df, ohe_test_df], axis=1
+    # )
 
     # 5. Normalise all the features
     normalised_train_df = pd.DataFrame(
         Normalizer().fit_transform(X=train_df.drop(labels=["target"], axis=1).values)
     )
     normalised_train_df.columns = train_df.drop(labels=["target"], axis=1).columns
+    normalised_train_df = pd.concat([normalised_train_df, ohe_train_df], axis=1)
     normalised_train_df["target"] = train_df["target"]
 
     normalised_test_df = pd.DataFrame(
         Normalizer().transform(X=test_df.drop(labels=["target"], axis=1).values)
     )
     normalised_test_df.columns = test_df.drop(labels=["target"], axis=1).columns
+    normalised_test_df = pd.concat([normalised_test_df, ohe_test_df], axis=1)
     normalised_test_df["target"] = test_df["target"]
 
     print("train df distribution")

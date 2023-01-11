@@ -42,10 +42,10 @@ import pandas as pd
 
 def main():
     model_algo = "dt"
-    sigma_val = 4.0
-    temperature_val = 13.0
+    sigma_val = 7.0
+    temperature_val = 3.0
     distance_weight_val = 0.01
-    lr = 0.008
+    lr = 0.001
     opt = "adam"
     num_iter = 1000
     distance_function = "mahal"
