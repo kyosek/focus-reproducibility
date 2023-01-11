@@ -3,6 +3,21 @@ import pickle
 import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+
+def _evaluate_model(model, data_name: str):
+    test_name = data_name.replace("train", "test")
+    df = pd.read_csv("data/{}.tsv".format(test_name), sep="\t", index_col=0)
+    feat_matrix = df.values.astype(float)
+
+    x_test = feat_matrix[:, :-1]
+    y_test = np.where(feat_matrix[:, -1] == -1, 0, 1)
+
+    preds = model.predict(x_test)
+
+    print("Accuracy score is:")
+    print(accuracy_score(y_test, preds))
 
 
 def train_model(
@@ -38,10 +53,12 @@ def train_model(
     pickle.dump(model, open("my_models/" + model_type + "_" + data_name + ".pkl", "wb"))
     print("train completed")
 
+    _evaluate_model(model, data_name)
+
 
 if __name__ == "__main__":
     train_model(
-        model_type="ab",
-        data_name="cf_wine_data_train",
-        max_depth=4,
+        model_type="dt",
+        data_name="cf_german_train",
+        max_depth=2,
     )
