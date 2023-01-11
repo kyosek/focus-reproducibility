@@ -51,7 +51,7 @@ def main():
     distance_function = "mahal"
     # "mahal"cosine"euclidean
 
-    data_name = "cf_compas_num_data_test"
+    data_name = "cf_german_test"
     model_type = "ss"
 
     start_time = time.time()
@@ -67,10 +67,8 @@ def main():
     train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
     x_train = np.array(train_data.iloc[:, :-1])
 
-    # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
-    # model = joblib.load("models/model_dt_cf_compas_num_depth4", "rb")
     model = pickle.load(
-        open("my_models/" + model_algo + "_" + train_name + "_replication.pkl", "rb")
+        open("my_models/" + model_algo + "_" + train_name + ".pkl", "rb")
     )
 
     output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(

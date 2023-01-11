@@ -63,8 +63,8 @@ def data_modification():
         "target",
     ]
 
-    # 3. Make the target variable 0 and 1 instead of 1 (good) and 2 (bad)
-    df["target"] = df["target"] - 1
+    # 3. Make the target variable 0 and 1 instead of 1 (good) and -1 (bad)
+    df["target"] = np.where(df["target"] == 1, -1, 1)
 
     # 4. Split train and test data
     train_df, test_df = train_test_split(df, test_size=0.3, random_state=42)
