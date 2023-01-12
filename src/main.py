@@ -41,14 +41,14 @@ import pandas as pd
 
 
 def main():
-    model_algo = "dt"
+    model_algo = "rf"
     sigma_val = 7.0
     temperature_val = 3.0
     distance_weight_val = 0.01
     lr = 0.001
     opt = "adam"
     num_iter = 1000
-    distance_function = "mahal"
+    distance_function = "l1"
     # "mahal"cosine"euclidean
 
     data_name = "cf_german_test"
