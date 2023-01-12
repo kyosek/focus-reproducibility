@@ -16,6 +16,8 @@ def _evaluate_model(model, data_name: str):
 
     preds = model.predict(x_test)
 
+    print("Prediction distribution:")
+    print(pd.DataFrame(preds).describe())
     print("Accuracy score is:")
     print(accuracy_score(y_test, preds))
 
@@ -35,19 +37,19 @@ def train_model(
         # model = RandomForestClassifier(
         #     n_estimators=n_estimators, max_depth=max_depth, random_state=42
         # )
-        model = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=42)
+        model = RandomForestClassifier(n_estimators=100, max_depth=max_depth, random_state=42)
     elif model_type == "ab":
-        # dt = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
-        # model = AdaBoostClassifier(
-        #     base_estimator=dt,
-        #     n_estimators=n_estimators,
-        #     learning_rate=lr,
-        #     random_state=42,
-        # )
+        dt = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
         model = AdaBoostClassifier(
-            n_estimators=100,
+            base_estimator=dt,
+            # n_estimators=n_estimators,
+            # learning_rate=lr,
             random_state=42,
         )
+        # model = AdaBoostClassifier(
+        #     n_estimators=500,
+        #     random_state=42,
+        # )
 
     model.fit(x_train, y_train)
     pickle.dump(model, open("my_models/" + model_type + "_" + data_name + ".pkl", "wb"))
@@ -58,7 +60,8 @@ def train_model(
 
 if __name__ == "__main__":
     train_model(
-        model_type="dt",
+        model_type="ab",
         data_name="cf_german_train",
-        max_depth=2,
+        max_depth=3,
+        n_estimators=1000,
     )
