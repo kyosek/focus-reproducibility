@@ -18,10 +18,9 @@ def safe_cosine(x1, x2, epsilon=10.0 ** -10):
         axis=-1,
         reduction=tf.keras.losses.Reduction.NONE,
     )
-    dist = cosine_loss(normalize_x1, normalize_x2) + 1 + epsilon
+    dist = 1 - cosine_loss(normalize_x1, normalize_x2) + epsilon
 
-    dist = tf.squeeze(dist)
-    dist = tf.cast(dist, tf.float32)
+    dist = tf.cast(tf.squeeze(dist), tf.float32)
     return dist
 
 
