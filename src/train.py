@@ -61,7 +61,7 @@ def train_model(
 if __name__ == "__main__":
     train_model(
         model_type="ab",
-        data_name="cf_german_train",
-        max_depth=3,
-        n_estimators=1000,
+        data_name="cf_shop2_data_train",
+        max_depth=1,
+        n_estimators=100,
     )

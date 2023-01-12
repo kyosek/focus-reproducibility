@@ -41,7 +41,7 @@ import pandas as pd
 
 
 def main():
-    model_algo = "ab"
+    model_algo = "rf"
     sigma_val = 7.0
     temperature_val = 3.0
     distance_weight_val = 0.01
@@ -51,7 +51,7 @@ def main():
     distance_function = "l1"
     # "mahal"cosine"euclidean
 
-    data_name = "cf_german_test"
+    data_name = "cf_shop2_data_test"
     model_type = "ss"
 
     start_time = time.time()
