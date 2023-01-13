@@ -41,35 +41,16 @@ import pandas as pd
 
 
 def main():
-    model_algo = "ab"
+    model_type = "rf"
     sigma_val = 7.0
     temperature_val = 3.0
     distance_weight_val = 0.01
     lr = 0.001
     opt = "adam"
-    num_iter = 650
+    num_iter = 1000
+    data_name = "cf_compas_num_data_test"
     distance_function = "cosine"
     # "mahal"cosine"euclidean"l1
-
-    data_name = "cf_compas_num_data_test"
-    model_type = "ss"
-
-    start_time = time.time()
-
-    df = pd.read_csv("data/{}.tsv".format(data_name), sep="\t", index_col=0)
-    feat_columns = df.columns
-    feat_matrix = df.values.astype(float)
-
-    feat_input = feat_matrix[:, :-1]
-
-    # Include training data to compute covariance matrix for Mahalanobis distance
-    train_name = data_name.replace("test", "train")
-    train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
-    x_train = np.array(train_data.iloc[:, :-1])
-
-    model = pickle.load(
-        open("my_models/" + model_algo + "_" + train_name + ".pkl", "rb")
-    )
 
     output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
         distance_function,
@@ -80,6 +61,23 @@ def main():
         temperature_val,
         distance_weight_val,
         lr,
+    )
+
+    start_time = time.time()
+
+    df = pd.read_csv("data/{}.tsv".format(data_name), sep="\t", index_col=0)
+    feat_columns = df.columns
+    feat_matrix = df.values.astype(float)
+
+    feat_input = feat_matrix[:, :-1]
+
+    if distance_function == "mahal":
+        train_name = data_name.replace("test", "train")
+        train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
+        x_train = np.array(train_data.iloc[:, :-1])
+
+    model = pickle.load(
+        open("my_models/" + model_type + "_" + train_name + ".pkl", "rb")
     )
 
     unchanged_ever, cfe_distance, best_perturb = compute_cfe(
@@ -100,13 +98,12 @@ def main():
     generate_cf_stats(
         output_root,
         data_name,
-        model_algo,
         distance_function,
         unchanged_ever,
         cfe_distance,
     )
 
-    pd.DataFrame(cfe_distance).to_csv(f"cfe_{model_algo}_{train_name}.csv")
+    pd.DataFrame(cfe_distance).to_csv(f"cfe_{model_type}_{train_name}.csv")
 
     # df_perturb = generate_perturb_df(best_distance, best_perturb, feat_columns)
     # df = generate_perturbed_df(best_perturb, feat_input)
