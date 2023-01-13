@@ -9,12 +9,14 @@ import matplotlib.pyplot as plt
 def generate_cf_stats(
     output_root: str,
     data_name: str,
+    model_algo,
     distance_function,
     unchanged_ever,
     counterfactual_examples,
 ):
     cf_stats = {
         "dataset": data_name,
+        "model_algo": model_algo,
         "distance_function": distance_function,
         "unchanged_ever": len(unchanged_ever),
         "mean_dist": np.mean(counterfactual_examples),

@@ -219,7 +219,7 @@ def compute_cfe(
                 distance_function, perturbed, feat_input, x_train
             )
 
-            hinge_approx_prob = indicator * approx_prob
+            hinge_approx_prob = tf.cast(indicator * approx_prob, tf.float32)
             loss = tf.reduce_mean(tf.cast(hinge_approx_prob + distance_weight * distance, tf.float32))
 
             grad = tape.gradient(loss, to_optimize)

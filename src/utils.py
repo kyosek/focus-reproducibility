@@ -31,7 +31,7 @@ def true_cosine(x1: object, x2: object) -> object:
         axis=-1,
         reduction=tf.keras.losses.Reduction.NONE,
     )
-    dist = cosine_loss(normalize_x1, normalize_x2) + 1
+    dist = 1 - cosine_loss(normalize_x1, normalize_x2)
 
     dist = tf.squeeze(dist)
     dist = tf.cast(dist, tf.float32)
@@ -88,7 +88,7 @@ def calculate_distance(distance_function: str, perturbed, feat_input, x_train=No
     if distance_function == "euclidean":
         return safe_euclidean(perturbed - feat_input, axis=1)
     elif distance_function == "cosine":
-        return safe_cosine(perturbed, feat_input)
+        return safe_cosine(feat_input, perturbed)
     elif distance_function == "l1":
         return safe_l1(perturbed - feat_input)
     elif distance_function == "mahal":

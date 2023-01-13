@@ -6,7 +6,7 @@ import pickle
 
 
 def objective(trial):
-    model_algo = "dt"
+    model_algo = "ab"
     opt = "adam"
     num_iter = 1000
     distance_function = "mahal"

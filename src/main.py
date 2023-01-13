@@ -41,17 +41,17 @@ import pandas as pd
 
 
 def main():
-    model_algo = "rf"
+    model_algo = "ab"
     sigma_val = 7.0
     temperature_val = 3.0
     distance_weight_val = 0.01
     lr = 0.001
     opt = "adam"
-    num_iter = 1000
-    distance_function = "l1"
-    # "mahal"cosine"euclidean
+    num_iter = 650
+    distance_function = "cosine"
+    # "mahal"cosine"euclidean"l1
 
-    data_name = "cf_shop2_data_test"
+    data_name = "cf_compas_num_data_test"
     model_type = "ss"
 
     start_time = time.time()
@@ -100,6 +100,7 @@ def main():
     generate_cf_stats(
         output_root,
         data_name,
+        model_algo,
         distance_function,
         unchanged_ever,
         cfe_distance,
