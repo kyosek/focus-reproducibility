@@ -12,7 +12,7 @@ def objective(trial):
     distance_function = "mahal"
     # "mahal"cosine"euclidean"l1
 
-    data_name = "cf_wine_data_test"
+    data_name = "cf_compas_num_data_test"
 
     try:
         unchanged_df = pd.read_csv(f"{data_name}_unchanged.csv")
@@ -46,9 +46,7 @@ def objective(trial):
         distance_weight_val=round(
             trial.suggest_float("distance_weight", 0.01, 0.1, step=0.01), 2
         ),
-        lr=round(
-            trial.suggest_float("lr", 0.001, 0.01, step=0.001), 3
-        ),
+        lr=round(trial.suggest_float("lr", 0.001, 0.01, step=0.001), 3),
         # lr=0.003,
         num_iter=num_iter,
         x_train=x_train,
@@ -58,8 +56,12 @@ def objective(trial):
     if type(unchanged_df) == list:
         unchanged_df.append(unchanged_ever)
     else:
-        unchanged_df = unchanged_df.append({"unchanged": unchanged_ever}, ignore_index=True)
-    pd.DataFrame(unchanged_df, columns=["unchanged"]).to_csv(f"{data_name}_unchanged.csv")
+        unchanged_df = unchanged_df.append(
+            {"unchanged": unchanged_ever}, ignore_index=True
+        )
+    pd.DataFrame(unchanged_df, columns=["unchanged"]).to_csv(
+        f"{data_name}_unchanged.csv"
+    )
 
     print(f"Unchanged: {unchanged_ever}")
     print(f"Mean distance: {np.mean(cfe_distance)}")

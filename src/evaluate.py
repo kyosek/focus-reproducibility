@@ -22,7 +22,7 @@ def generate_cf_stats(
         "distance_function": distance_function,
         "unchanged_ever": unchanged_ever,
         "mean_dist": np.mean(counterfactual_examples),
-        "time (min)": np.round((end_time - start_time) / 60)
+        "time (min)": np.round((end_time - start_time) / 60),
     }
 
     print("saving the text file")

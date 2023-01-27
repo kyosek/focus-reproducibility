@@ -1,61 +1,157 @@
+import numpy as np
 import pandas as pd
-import pickle
+import tensorflow as tf
+
+import pytest
+
 from src.utils import (
     safe_euclidean,
-    true_euclidean,
     safe_cosine,
-    true_cosine,
     safe_l1,
-    true_l1,
     safe_mahal,
-    true_mahal,
     tf_cov,
     calculate_distance,
 )
 
-dt_model = pickle.load(open("my_models/dt_cf_compas_num_data_train.pkl", "rb"))
-rf_model = pickle.load(open("my_models/rf_cf_compas_num_data_train.pkl", "rb"))
-ab_model = pickle.load(open("my_models/ab_cf_compas_num_data_train.pkl", "rb"))
-df = pd.read_csv("data/cf_compas_num_data_test.tsv", sep="\t", index_col=0)
-feat_input = df.values.astype(float)[:, :-1]
-sigma = 5.0
-temperature = 10.0
+compas_path = "data/cf_compas_num_data_test.tsv"
+heloc_path = "data/cf_heloc_data_test.tsv"
+shop_path = "data/cf_shop2_data_test.tsv"
+wine_path = "data/cf_wine_data_test.tsv"
+
+epsilon = 10.0 ** -10
+
+covariance_test_data = [
+    (
+        tf.constant([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=tf.float64),
+        tf.constant(
+            [[6.0, 6.0, 6.0], [6.0, 6.0, 6.0], [6.0, 6.0, 6.0]], dtype=tf.float64
+        ),
+    ),
+    (
+        tf.constant([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=tf.float64),
+        tf.convert_to_tensor(
+            np.cov(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).T, bias=True),
+            dtype=tf.float64,
+        ),
+    ),
+    # COMPAS dataset
+    (
+        pd.read_csv(compas_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+        tf.convert_to_tensor(
+            np.cov(
+                pd.read_csv(compas_path, sep="\t", index_col=0)
+                .values.astype(float)[:, :-1]
+                .T,
+                bias=True,
+            ),
+            dtype=tf.float64,
+        ),
+    ),
+    # HELOC dataset
+    (
+        pd.read_csv(heloc_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+        tf.convert_to_tensor(
+            np.cov(
+                pd.read_csv(heloc_path, sep="\t", index_col=0)
+                .values.astype(float)[:, :-1]
+                .T,
+                bias=True,
+            ),
+            dtype=tf.float64,
+        ),
+    ),
+    # Shopping dataset
+    (
+        pd.read_csv(shop_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+        tf.convert_to_tensor(
+            np.cov(
+                pd.read_csv(shop_path, sep="\t", index_col=0)
+                .values.astype(float)[:, :-1]
+                .T,
+                bias=True,
+            ),
+            dtype=tf.float64,
+        ),
+    ),
+    # Wine dataset
+    (
+        pd.read_csv(wine_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+        tf.convert_to_tensor(
+            np.cov(
+                pd.read_csv(wine_path, sep="\t", index_col=0)
+                .values.astype(float)[:, :-1]
+                .T,
+                bias=True,
+            ),
+            dtype=tf.float64,
+        ),
+    ),
+]
+
+distance_test_data = [
+    # COMPAS dataset
+    (
+        pd.read_csv(compas_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+        pd.read_csv(compas_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+    ),
+]
 
 
-def test_safe_euclidean():
-    assert safe_euclidean(feat_input).shape == (1852,)
+@pytest.mark.parametrize("feat_input_cov, expected_output_cov", covariance_test_data)
+def test_tf_cov(feat_input_cov, expected_output_cov):
+    assert tf_cov(feat_input_cov).numpy().all() == expected_output_cov.numpy().all()
 
 
-def test_true_euclidean():
-    assert true_euclidean(feat_input).shape == (1852,)
+@pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
+def test_safe_euclidean(feat_input, expected_output):
+    expected = (np.sum(expected_output ** 2, axis=-1) + epsilon) ** 0.5
+    assert safe_euclidean(feat_input).numpy.all() == expected.all()
 
 
-def test_safe_cosine():
-    assert safe_cosine(feat_input, feat_input).shape == (1852,)
+@pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
+def test_safe_cosine(feat_input, expected_output):
+    assert safe_cosine(feat_input, feat_input).shape == expected_output
 
 
-def test_true_cosine():
-    assert true_cosine(feat_input, feat_input).shape == (1852,)
+@pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
+def test_safe_l1(feat_input, expected_output):
+    assert safe_l1(feat_input).shape == expected_output
 
 
-def test_safe_l1():
-    assert safe_l1(feat_input).shape == (1852,)
+@pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
+def test_safe_mahal(feat_input, expected_output):
+    assert safe_mahal(feat_input, feat_input).shape == expected_output
 
 
-def test_true_l1():
-    assert true_l1(feat_input).shape == (1852,)
-
-
-def test_tf_cov():
-    assert tf_cov(feat_input).shape == (6, 6)
-
-
-def test_safe_mahal():
-    assert safe_mahal(feat_input, feat_input).shape == (1852,)
-
-
-def test_true_mahal():
-    assert true_mahal(feat_input, feat_input).shape == (1852,)
+@pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
+def test_calculate_distance(feat_input, expected_output):
+    assert (
+        calculate_distance(
+            distance_function="euclidean", perturbed=feat_input, feat_input=feat_input
+        ).shape
+        == expected_output
+    )
+    assert (
+        calculate_distance(
+            distance_function="cosine", perturbed=feat_input, feat_input=feat_input
+        ).shape
+        == expected_output
+    )
+    assert (
+        calculate_distance(
+            distance_function="l1", perturbed=feat_input, feat_input=feat_input
+        ).shape
+        == expected_output
+    )
+    assert (
+        calculate_distance(
+            distance_function="mahal",
+            perturbed=feat_input,
+            feat_input=feat_input,
+            x_train=feat_input,
+        ).shape
+        == expected_output
+    )
 
 
 def test_mkdir_p():
@@ -64,21 +160,3 @@ def test_mkdir_p():
 
 def test_safe_open():
     pass
-
-
-def test_calculate_distance():
-    assert calculate_distance(
-        distance_function="euclidean", perturbed=feat_input, feat_input=feat_input
-    ).shape == (1852,)
-    assert calculate_distance(
-        distance_function="cosine", perturbed=feat_input, feat_input=feat_input
-    ).shape == (1852,)
-    assert calculate_distance(
-        distance_function="l1", perturbed=feat_input, feat_input=feat_input
-    ).shape == (1852,)
-    assert calculate_distance(
-        distance_function="mahal",
-        perturbed=feat_input,
-        feat_input=feat_input,
-        x_train=feat_input
-    ).shape == (1852,)
