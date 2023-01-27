@@ -11,13 +11,13 @@ from src.approximation import (
 )
 
 dt_model = pickle.load(
-    open("my_models/dt_cf_compas_num_data_train_replication.pkl", "rb")
+    open("my_models/dt_cf_compas_num_data_train.pkl", "rb")
 )
 rf_model = pickle.load(
-    open("my_models/rf_cf_compas_num_data_train_replication.pkl", "rb")
+    open("my_models/rf_cf_compas_num_data_train.pkl", "rb")
 )
 ab_model = pickle.load(
-    open("my_models/ab_cf_compas_num_data_train_replication.pkl", "rb")
+    open("my_models/ab_cf_compas_num_data_train.pkl", "rb")
 )
 df = pd.read_csv("data/cf_compas_num_data_test.tsv", sep="\t", index_col=0)
 feat_input = df.values.astype(float)[:, :-1]

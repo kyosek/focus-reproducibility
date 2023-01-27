@@ -41,15 +41,15 @@ import pandas as pd
 
 
 def main():
-    model_type = "rf"
+    model_type = "dt"
     sigma_val = 7.0
     temperature_val = 3.0
     distance_weight_val = 0.01
     lr = 0.001
     opt = "adam"
     num_iter = 1000
-    data_name = "cf_compas_num_data_test"
-    distance_function = "cosine"
+    data_name = "cf_german_test"
+    distance_function = "euclidean"
     # "mahal"cosine"euclidean"l1
 
     output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
@@ -71,10 +71,9 @@ def main():
 
     feat_input = feat_matrix[:, :-1]
 
-    if distance_function == "mahal":
-        train_name = data_name.replace("test", "train")
-        train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
-        x_train = np.array(train_data.iloc[:, :-1])
+    train_name = data_name.replace("test", "train")
+    train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
+    x_train = np.array(train_data.iloc[:, :-1])
 
     model = pickle.load(
         open("my_models/" + model_type + "_" + train_name + ".pkl", "rb")
@@ -101,6 +100,7 @@ def main():
         distance_function,
         unchanged_ever,
         cfe_distance,
+        start_time,
     )
 
     pd.DataFrame(cfe_distance).to_csv(f"cfe_{model_type}_{train_name}.csv")
@@ -108,9 +108,6 @@ def main():
     # df_perturb = generate_perturb_df(best_distance, best_perturb, feat_columns)
     # df = generate_perturbed_df(best_perturb, feat_input)
     # plot_pertubed(df_perturb)
-    end_time = time.time()
-
-    print("Finished!! ~{} sec".format(np.round(end_time - start_time)))
 
 
 if __name__ == "__main__":
