@@ -49,7 +49,7 @@ def main():
     opt = "adam"
     num_iter = 1000
     data_name = "cf_german_test"
-    distance_function = "euclidean"
+    distance_function = "cosine"
     # "mahal"cosine"euclidean"l1
 
     output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(

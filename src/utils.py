@@ -4,13 +4,13 @@ import os
 import errno
 
 
-def safe_euclidean(x, epsilon=10.0 ** -10, axis=-1) -> tf.Tensor:
-    return (tf.reduce_sum(x ** 2, axis=axis) + epsilon) ** 0.5
+def safe_euclidean(matrix_diff, epsilon=10.0 ** -10, axis=-1) -> tf.Tensor:
+    return (tf.reduce_sum(matrix_diff ** 2, axis=axis) + epsilon) ** 0.5
 
 
-def safe_cosine(x1, x2, epsilon=10.0 ** -10) -> tf.Tensor:
-    normalize_x1 = tf.nn.l2_normalize(x1, dim=1)
-    normalize_x2 = tf.nn.l2_normalize(x2, dim=1)
+def safe_cosine(feat_input, perturbed, epsilon=10.0 ** -10) -> tf.Tensor:
+    normalize_x1 = tf.nn.l2_normalize(feat_input, dim=1)
+    normalize_x2 = tf.nn.l2_normalize(perturbed, dim=1)
     cosine_loss = tf.keras.losses.CosineSimilarity(
         axis=-1,
         reduction=tf.keras.losses.Reduction.NONE,
@@ -21,27 +21,35 @@ def safe_cosine(x1, x2, epsilon=10.0 ** -10) -> tf.Tensor:
     return dist
 
 
-def safe_l1(x, epsilon=10.0 ** -10, axis=1) -> tf.Tensor:
-    return tf.reduce_sum(tf.abs(x), axis=axis) + epsilon
+def safe_l1(matrix_diff, epsilon=10.0 ** -10, axis=1) -> tf.Tensor:
+    return tf.reduce_sum(tf.abs(matrix_diff), axis=axis) + epsilon
 
 
-def tf_cov(x):
-    mean_x = tf.reduce_mean(x, axis=0, keepdims=True)
+def tf_cov(x_train) -> tf.Tensor:
+    mean_x = tf.reduce_mean(x_train, axis=0, keepdims=True)
     mx = tf.matmul(tf.transpose(mean_x), mean_x)
-    vx = tf.matmul(tf.transpose(x), x) / tf.cast(tf.shape(x)[0], tf.float64)
+    vx = tf.matmul(tf.transpose(x_train), x_train) / tf.cast(
+        tf.shape(x_train)[0], tf.float64
+    )
     cov_xx = vx - mx
     return cov_xx
 
 
-def safe_mahal(x_test, x_train, epsilon=10.0 ** -10) -> tf.Tensor:
+def safe_mahal(matrix_diff, x_train, epsilon=10.0 ** -10) -> tf.Tensor:
     covar = tf_cov(x_train)
     inv_covar = tf.linalg.inv(covar)
     return tf.reduce_sum(
-        tf.multiply(tf.matmul(x_test + epsilon, inv_covar), x_test + epsilon), axis=1
+        tf.multiply(tf.matmul(matrix_diff + epsilon, inv_covar), matrix_diff + epsilon),
+        axis=1,
     )
 
 
-def calculate_distance(distance_function: str, perturbed: tf.Variable, feat_input: np.ndarray, x_train: np.ndarray=None) -> tf.Tensor:
+def calculate_distance(
+    distance_function: str,
+    perturbed: tf.Variable,
+    feat_input: np.ndarray,
+    x_train: np.ndarray = None,
+) -> tf.Tensor:
     if distance_function == "euclidean":
         return safe_euclidean(perturbed - feat_input, axis=1)
     elif distance_function == "cosine":
@@ -59,7 +67,7 @@ def calculate_distance(distance_function: str, perturbed: tf.Variable, feat_inpu
 def mkdir_p(path):
     try:
         os.makedirs(path)
-    except OSError as exc:  # Python >2.5
+    except OSError as exc:
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else:

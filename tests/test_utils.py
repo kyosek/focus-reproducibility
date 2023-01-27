@@ -4,6 +4,8 @@ import tensorflow as tf
 
 import pytest
 
+from sklearn.metrics.pairwise import cosine_similarity
+
 from src.utils import (
     safe_euclidean,
     safe_cosine,
@@ -94,6 +96,21 @@ distance_test_data = [
         pd.read_csv(compas_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
         pd.read_csv(compas_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
     ),
+    # HELOC dataset
+    (
+        pd.read_csv(heloc_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+        pd.read_csv(heloc_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+    ),
+    # Shopping dataset
+    (
+        pd.read_csv(shop_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+        pd.read_csv(shop_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+    ),
+    # Wine dataset
+    (
+        pd.read_csv(wine_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+        pd.read_csv(wine_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
+    ),
 ]
 
 
@@ -104,23 +121,33 @@ def test_tf_cov(feat_input_cov, expected_output_cov):
 
 @pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
 def test_safe_euclidean(feat_input, expected_output):
-    expected = (np.sum(expected_output ** 2, axis=-1) + epsilon) ** 0.5
-    assert safe_euclidean(feat_input).numpy.all() == expected.all()
+    expected = (np.sum(feat_input ** 2, axis=-1) + epsilon) ** 0.5
+    assert safe_euclidean(feat_input).numpy().all() == expected.all()
 
 
 @pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
 def test_safe_cosine(feat_input, expected_output):
-    assert safe_cosine(feat_input, feat_input).shape == expected_output
+    expected = 1 - cosine_similarity(feat_input, feat_input) + epsilon
+    assert safe_cosine(feat_input, feat_input, epsilon).numpy().all() == expected.all()
 
 
 @pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
 def test_safe_l1(feat_input, expected_output):
-    assert safe_l1(feat_input).shape == expected_output
+    expected = np.sum(abs(feat_input), axis=1) + epsilon
+    assert safe_l1(feat_input).numpy().all() == expected.all()
 
 
 @pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
 def test_safe_mahal(feat_input, expected_output):
-    assert safe_mahal(feat_input, feat_input).shape == expected_output
+
+    x_mu = feat_input - np.mean(feat_input)
+    cov = np.cov(feat_input.T)
+    inv_covar = np.linalg.inv(cov)
+    left = np.dot(x_mu, inv_covar)
+    mahal = np.dot(left, x_mu.T)
+    expected = mahal.diagonal()
+
+    assert safe_mahal(feat_input, feat_input).numpy().all() == expected.all()
 
 
 @pytest.mark.parametrize("feat_input, expected_output", distance_test_data)
@@ -155,8 +182,10 @@ def test_calculate_distance(feat_input, expected_output):
 
 
 def test_mkdir_p():
+    # No need to test this function
     pass
 
 
 def test_safe_open():
+    # No need to test this function
     pass
