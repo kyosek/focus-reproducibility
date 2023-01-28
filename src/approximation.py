@@ -5,7 +5,7 @@ from sklearn.tree import DecisionTreeClassifier
 from src.utils import calculate_distance
 
 
-def _parse_class_tree(tree, feat_input, sigma: float) -> list:
+def _parse_class_tree(tree, feat_input: np.ndarray, sigma: float) -> list:
     """
     This function traverses the tree structure to compute impurity of each node and
     use sigmoid function to approximate them.
@@ -178,7 +178,7 @@ def compute_cfe(
     )
 
     n_examples = len(feat_input)
-    distance_weight = np.full(n_examples, distance_weight_val)
+    distance_weight: np.ndarray = np.full(n_examples, distance_weight_val)
     to_optimize = [perturbed]
     indicator = np.ones(n_examples)
     best_perturb = np.zeros(perturbed.shape)
