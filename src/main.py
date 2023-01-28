@@ -49,7 +49,7 @@ def main():
     opt = "adam"
     num_iter = 1000
     data_name = "cf_german_test"
-    distance_function = "euclidean"
+    distance_function = "mahal"
     # "mahal"cosine"euclidean"l1
 
     output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
@@ -66,7 +66,6 @@ def main():
     start_time = time.time()
 
     df = pd.read_csv("data/{}.tsv".format(data_name), sep="\t", index_col=0)
-    feat_columns = df.columns
     feat_matrix = df.values.astype(float)
 
     feat_input = feat_matrix[:, :-1]

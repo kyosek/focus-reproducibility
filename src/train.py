@@ -37,7 +37,9 @@ def train_model(
         # model = RandomForestClassifier(
         #     n_estimators=n_estimators, max_depth=max_depth, random_state=42
         # )
-        model = RandomForestClassifier(n_estimators=100, max_depth=max_depth, random_state=42)
+        model = RandomForestClassifier(
+            n_estimators=100, max_depth=max_depth, random_state=42
+        )
     elif model_type == "ab":
         dt = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
         model = AdaBoostClassifier(
