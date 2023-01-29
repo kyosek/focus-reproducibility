@@ -4,7 +4,7 @@ import pickle
 
 import pytest
 
-from src.approximation import (
+from src.counterfactual_explanation import (
     _parse_class_tree,
     get_prob_classification_tree,
     get_prob_classification_forest,

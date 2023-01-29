@@ -1,5 +1,5 @@
 import dataset
-import approximation
+import counterfactual_explanation
 import utils
 import tensorflow as tf
 import numpy as np
