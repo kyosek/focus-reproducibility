@@ -3,6 +3,34 @@ import pandas as pd
 import optuna
 from src.counterfactual_explanation import compute_cfe
 import pickle
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("model_type", type=str)
+parser.add_argument("num_iter", type=int, default=100)
+parser.add_argument("sigma", type=float, default=1.0)
+parser.add_argument("temperature", type=float, default=1.0)
+parser.add_argument("distance_weight", type=float, default=0.01)
+parser.add_argument("lr", type=float, default=0.001)
+parser.add_argument(
+    "opt",
+    type=str,
+    default="adam",
+    help="Options are either adam or gd (as str)",
+)
+parser.add_argument("data_name", type=str)
+parser.add_argument("distance_function", type=str)
+
+args = parser.parse_args()
+model_type = args.model_type
+num_iter = args.num_iter
+sigma_val = args.sigma
+distance_weight_val = args.distance_weight
+lr = args.lr
+opt = args.opt
+data_name = args.data_name
+distance_function = args.distance_function
 
 
 def objective(trial):
@@ -20,14 +48,6 @@ def objective(trial):
     * note: typically we want to minimise a number of unchanged first, so penalising the score by having squared number.
     Also, to not distort this objective, having the mean distance divided by 100.
     """
-    model_algo = "dt"
-    opt = "adam"
-    num_iter = 1000
-    distance_function = "mahal"
-    # "mahal"cosine"euclidean"l1
-
-    data_name = "cf_compas_num_data_test"
-
     try:
         unchanged_df = pd.read_csv(f"{data_name}_unchanged.csv")
     except FileNotFoundError:
@@ -42,26 +62,29 @@ def objective(trial):
     train_data = pd.read_csv("data/{}.tsv".format(train_name), sep="\t", index_col=0)
     x_train = np.array(train_data.iloc[:, :-1])
 
-    # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
-    # model = joblib.load("models/{}".format(model_name), "rb")
     model = pickle.load(
-        open("retrained_models/" + model_algo + "_" + train_name + ".pkl", "rb")
+        open("retrained_models/" + model_type + "_" + train_name + ".pkl", "rb")
     )
 
-    # add if model_type == "DT", temperature_val = 0
+    # DT models do not use temperature
+    if model_type == "dt":
+        print("Using DT model, will turn off temperature tuning")
+        temperature_val = 0
+    else:
+        print("Using non-DT model, will tune temperature")
+        temperature_val = trial.suggest_int("temperature", 1, 20, step=1.0)
+
     unchanged_ever, cfe_distance, best_perturb = compute_cfe(
         model,
         feat_input,
         distance_function,
         opt,
-        sigma_val=trial.suggest_int("sigma", 1, 20),
-        # temperature_val=trial.suggest_int("temperature", 1, 20),
-        temperature_val=0,
+        sigma_val=trial.suggest_int("sigma", 1, 20, step=1.0),
+        temperature_val=temperature_val,
         distance_weight_val=round(
             trial.suggest_float("distance_weight", 0.01, 0.1, step=0.01), 2
         ),
         lr=round(trial.suggest_float("lr", 0.001, 0.01, step=0.001), 3),
-        # lr=0.003,
         num_iter=num_iter,
         x_train=x_train,
         verbose=0,
