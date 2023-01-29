@@ -31,7 +31,7 @@ def objective(trial):
     # had to match the scikit-learn version to 0.21.3 in order to load the model but eventually upgrade it
     # model = joblib.load("models/{}".format(model_name), "rb")
     model = pickle.load(
-        open("my_models/" + model_algo + "_" + train_name + ".pkl", "rb")
+        open("retrained_models/" + model_algo + "_" + train_name + ".pkl", "rb")
     )
 
     # add if model_type == "DT", temperature_val = 0

@@ -75,7 +75,7 @@ def main():
     x_train = np.array(train_data.iloc[:, :-1])
 
     model = pickle.load(
-        open("my_models/" + model_type + "_" + train_name + ".pkl", "rb")
+        open("retrained_models/" + model_type + "_" + train_name + ".pkl", "rb")
     )
 
     unchanged_ever, cfe_distance, best_perturb = compute_cfe(
