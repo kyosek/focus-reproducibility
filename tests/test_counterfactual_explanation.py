@@ -4,7 +4,7 @@ import pickle
 
 import pytest
 
-from src.approximation import (
+from src.counterfactual_explanation import (
     _parse_class_tree,
     get_prob_classification_tree,
     get_prob_classification_forest,
@@ -12,9 +12,9 @@ from src.approximation import (
     compute_cfe,
 )
 
-dt_model = pickle.load(open("my_models/dt_cf_compas_num_data_train.pkl", "rb"))
-rf_model = pickle.load(open("my_models/rf_cf_compas_num_data_train.pkl", "rb"))
-ab_model = pickle.load(open("my_models/ab_cf_compas_num_data_train.pkl", "rb"))
+dt_model = pickle.load(open("retrained_models/dt_cf_compas_num_data_train.pkl", "rb"))
+rf_model = pickle.load(open("retrained_models/rf_cf_compas_num_data_train.pkl", "rb"))
+ab_model = pickle.load(open("retrained_models/ab_cf_compas_num_data_train.pkl", "rb"))
 compas_path = "data/cf_compas_num_data_test.tsv"
 heloc_path = "data/cf_heloc_data_test.tsv"
 shop_path = "data/cf_shop2_data_test.tsv"
@@ -152,27 +152,27 @@ def test_filter_hinge_loss(model, feat_input, sigma, temperature):
             pd.read_csv(compas_path, sep="\t", index_col=0).values.astype(float)[
                 :, :-1
             ],
-            pickle.load(open("my_models/dt_cf_compas_num_data_train.pkl", "rb")),
-            pickle.load(open("my_models/rf_cf_compas_num_data_train.pkl", "rb")),
-            pickle.load(open("my_models/ab_cf_compas_num_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/dt_cf_compas_num_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/rf_cf_compas_num_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/ab_cf_compas_num_data_train.pkl", "rb")),
         ),
         (
             pd.read_csv(heloc_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
-            pickle.load(open("my_models/dt_cf_heloc_data_train.pkl", "rb")),
-            pickle.load(open("my_models/rf_cf_heloc_data_train.pkl", "rb")),
-            pickle.load(open("my_models/ab_cf_heloc_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/dt_cf_heloc_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/rf_cf_heloc_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/ab_cf_heloc_data_train.pkl", "rb")),
         ),
         (
             pd.read_csv(shop_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
-            pickle.load(open("my_models/dt_cf_shop2_data_train.pkl", "rb")),
-            pickle.load(open("my_models/rf_cf_shop2_data_train.pkl", "rb")),
-            pickle.load(open("my_models/ab_cf_shop2_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/dt_cf_shop2_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/rf_cf_shop2_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/ab_cf_shop2_data_train.pkl", "rb")),
         ),
         (
             pd.read_csv(wine_path, sep="\t", index_col=0).values.astype(float)[:, :-1],
-            pickle.load(open("my_models/dt_cf_wine_data_train.pkl", "rb")),
-            pickle.load(open("my_models/rf_cf_wine_data_train.pkl", "rb")),
-            pickle.load(open("my_models/ab_cf_wine_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/dt_cf_wine_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/rf_cf_wine_data_train.pkl", "rb")),
+            pickle.load(open("retrained_models/ab_cf_wine_data_train.pkl", "rb")),
         ),
     ],
 )

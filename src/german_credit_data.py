@@ -81,9 +81,6 @@ def data_modification():
     train_df, test_df = train_df.drop(labels=cat_cols, axis=1), test_df.drop(
         labels=cat_cols, axis=1
     )
-    # train_df, test_df = pd.concat([train_df, ohe_train_df], axis=1), pd.concat(
-    #     [test_df, ohe_test_df], axis=1
-    # )
 
     # 5. Normalise all the features
     normalised_train_df = pd.DataFrame(

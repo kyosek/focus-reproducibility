@@ -54,7 +54,7 @@ def train_model(
         # )
 
     model.fit(x_train, y_train)
-    pickle.dump(model, open("my_models/" + model_type + "_" + data_name + ".pkl", "wb"))
+    pickle.dump(model, open("retrained_models/" + model_type + "_" + data_name + ".pkl", "wb"))
     print("train completed")
 
     _evaluate_model(model, data_name)
