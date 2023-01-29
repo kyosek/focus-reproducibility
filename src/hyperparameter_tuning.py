@@ -49,7 +49,7 @@ def objective(trial):
     Also, to not distort this objective, having the mean distance divided by 100.
     """
     try:
-        unchanged_df = pd.read_csv(f"{data_name}_unchanged.csv")
+        unchanged_df = pd.read_csv(f"visualisation_data/{data_name}_unchanged.csv")
     except FileNotFoundError:
         unchanged_df = []
 
@@ -68,10 +68,8 @@ def objective(trial):
 
     # DT models do not use temperature
     if model_type == "dt":
-        print("Using DT model, will turn off temperature tuning")
         temperature_val = 0
     else:
-        print("Using non-DT model, will tune temperature")
         temperature_val = trial.suggest_int("temperature", 1, 20, step=1.0)
 
     unchanged_ever, cfe_distance, best_perturb = compute_cfe(
@@ -97,7 +95,7 @@ def objective(trial):
             {"unchanged": unchanged_ever}, ignore_index=True
         )
     pd.DataFrame(unchanged_df, columns=["unchanged"]).to_csv(
-        f"{data_name}_unchanged.csv"
+        f"visualisation_data/{data_name}_unchanged.csv"
     )
 
     print(f"Unchanged: {unchanged_ever}")
