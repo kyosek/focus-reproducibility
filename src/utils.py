@@ -123,7 +123,7 @@ def calculate_distance(
     - ValueError: If `distance_function` is "mahal" but `x_train` is not provided.
     """
     if distance_function == "euclidean":
-        return safe_euclidean(perturbed - feat_input, axis=1)
+        return safe_euclidean(perturbed - feat_input)
     elif distance_function == "cosine":
         return safe_cosine(feat_input, perturbed)
     elif distance_function == "l1":
