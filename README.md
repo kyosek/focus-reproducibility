@@ -1,16 +1,14 @@
-# FOCUS: Flexible Optimizable Counterfactual Explanations for Tree Ensembles
+# [Re]:FOCUS: Flexible Optimizable Counterfactual Explanations for Tree Ensembles
 
-This repository is the official implementation of the [AAAI 2022 paper "FOCUS: Flexible Optimizable Counterfactual Explanations for Tree Ensembles"](https://arxiv.org/abs/1911.12199). 
+This repository is the reproduction study for the [AAAI 2022 paper "FOCUS: Flexible Optimizable Counterfactual Explanations for Tree Ensembles"](https://arxiv.org/abs/1911.12199). 
 
 ## Requirements
 
 To install requirements:
 
 ```setup
-conda env create --file environment.yml
+pip install -r requirements.txt
 ```
-
->📋 This will create a conda environment called tensorflow-py3
 
 
 ## Using FOCUS to generate counterfactual explanations

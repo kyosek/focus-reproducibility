@@ -6,6 +6,20 @@ import pickle
 
 
 def objective(trial):
+    """
+    This function is an objective function for hyperparameter tuning using optuna.
+    It trains and evaluates a decision tree model for a given dataset and computes the Counterfactual Explanation (CFE)
+    distance and unchanged rate for a set of hyperparameters.
+
+    Args:
+    trial (optuna.Trial): Object that contains information about the current trial, including hyperparameters.
+
+    Returns:
+    CFE distance mean and unchanged rate squared, as an objective function for hyperparameter optimization.
+
+    * note: typically we want to minimise a number of unchanged first, so penalising the score by having squared number.
+    Also, to not distort this objective, having the mean distance divided by 100.
+    """
     model_algo = "dt"
     opt = "adam"
     num_iter = 1000
