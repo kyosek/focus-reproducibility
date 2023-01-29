@@ -40,13 +40,9 @@ def generate_perturb_df(best_distance, best_perturb, feat_columns):
     return pd.concat([df_dist, df_perturb], axis=1)
 
 
-def generate_perturbed_df(df_perturb, feat_input):
-    return pd.DataFrame(df_perturb + feat_input)
-
-
 def plot_perturbed(df_perturb: pd.DataFrame):
     f, ax = plt.subplots(figsize=(3, 7))
     sns.barplot(
         x=np.mean(df_perturb.iloc[:, 2:], axis=0), y=df_perturb.iloc[:, 2:].columns
     )
-    ax.set(xlabel="Average pertubation per column")
+    ax.set(xlabel="Average perturbation per column")
