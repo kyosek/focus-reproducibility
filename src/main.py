@@ -4,49 +4,38 @@ from src.counterfactual_explanation import compute_cfe
 import time
 import pickle
 import pandas as pd
+import argparse
 
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument("--sigma", type=float, required=False, default=1.0)
-# parser.add_argument("--temperature", type=float, required=False, default=1.0)
-# parser.add_argument("--distance_weight", type=float, required=False, default=0.01)
-# parser.add_argument("--lr", type=float, required=False, default=0.001)
-# parser.add_argument(
-#     "--opt",
-#     type=str,
-#     required=False,
-#     default="adam",
-#     help="Options are either adam or gd (as str)",
-# )
-# parser.add_argument("--model_name", type=str, required=True)
-# parser.add_argument("--data_name", type=str, required=True)
-# parser.add_argument("--model_type", type=str, required=True)
-# parser.add_argument("--distance_function", type=str, required=True)
+parser = argparse.ArgumentParser()
+parser.add_argument("model_type", type=str)
+parser.add_argument("num_iter", type=int, default=100)
+parser.add_argument("sigma", type=float, default=1.0)
+parser.add_argument("temperature", type=float, default=1.0)
+parser.add_argument("distance_weight", type=float, default=0.01)
+parser.add_argument("lr", type=float, default=0.001)
+parser.add_argument(
+    "opt",
+    type=str,
+    default="adam",
+    help="Options are either adam or gd (as str)",
+)
+parser.add_argument("data_name", type=str)
+parser.add_argument("distance_function", type=str)
 
-# args = parser.parse_args()
-# sigma_val = args.sigma
-# temperature_val = args.temperature
-# distance_weight_val = args.distance_weight
-# lr = args.lr
-# opt = args.opt
-# model_name = args.model_name
-# data_name = args.data_name
-# model_type = args.model_type
-# distance_function = args.distance_function
+args = parser.parse_args()
+model_type = args.model_type
+num_iter = args.num_iter
+sigma_val = args.sigma
+temperature_val = args.temperature
+distance_weight_val = args.distance_weight
+lr = args.lr
+opt = args.opt
+data_name = args.data_name
+distance_function = args.distance_function
 
 
 def main():
-    model_type = "dt"
-    sigma_val = 7.0
-    temperature_val = 3.0
-    distance_weight_val = 0.01
-    lr = 0.001
-    opt = "adam"
-    num_iter = 1000
-    data_name = "cf_german_test"
-    distance_function = "mahal"
-    # "mahal"cosine"euclidean"l1
-
     output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
         distance_function,
         data_name,
