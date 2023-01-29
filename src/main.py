@@ -1,10 +1,5 @@
 import numpy as np
-from src.evaluate import (
-    generate_perturb_df,
-    generate_perturbed_df,
-    generate_cf_stats,
-    plot_perturbed,
-)
+from src.evaluate import generate_cf_stats
 from src.approximation import compute_cfe
 import time
 import pickle
@@ -103,10 +98,6 @@ def main():
     )
 
     pd.DataFrame(cfe_distance).to_csv(f"cfe_{model_type}_{train_name}.csv")
-
-    # df_perturb = generate_perturb_df(best_distance, best_perturb, feat_columns)
-    # df = generate_perturbed_df(best_perturb, feat_input)
-    # plot_pertubed(df_perturb)
 
 
 if __name__ == "__main__":

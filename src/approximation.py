@@ -7,8 +7,15 @@ from src.utils import calculate_distance
 
 def _parse_class_tree(tree, feat_input: np.ndarray, sigma: float) -> list:
     """
-    This function traverses the tree structure to compute impurity of each node and
-    use sigmoid function to approximate them.
+    Compute impurity of each leaf node in a decision tree and approximate it using sigmoid function.
+
+    Parameters:
+    tree (DecisionTreeClassifier): Trained decision tree model.
+    feat_input (np.ndarray): Input feature values.
+    sigma (float): Scaling factor to apply to sigmoid activation.
+
+    Returns:
+    list: A list of impurity values for each class label in the tree.
     """
     # Code is adapted from https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html
     n_nodes = tree.tree_.node_count
@@ -63,7 +70,21 @@ def _parse_class_tree(tree, feat_input: np.ndarray, sigma: float) -> list:
 
 def get_prob_classification_tree(tree, feat_input, sigma: float) -> tf.Tensor:
     """
-    This function takes approximated leaf_nodes' impurity and return each data points' probability
+    get_prob_classification_tree - computes the probability of each sample's classification in a decision tree
+
+    Inputs:
+
+    tree (scikit-learn DecisionTreeClassifier object): a fitted decision tree model
+    feat_input (tf.Tensor): a tensor of input features
+    sigma (float): parameter for Gaussian smoothing
+    Outputs:
+
+    prob_stacked (tf.Tensor): a tensor of probabilities for each sample's classification
+    This function returns the probabilities of each sample's classification in a decision tree.
+    It calculates the impurities of the leaf nodes that each sample falls into, and then
+    computes the sum of these impurities for each class. If the tree has only one node,
+    the probability of the correct class is set to 1 and the probability of the incorrect class is set to 0.
+    The final result is a tensor of stacked probabilities for each sample's classification.
     """
 
     leaf_nodes = _parse_class_tree(tree, feat_input, sigma)
@@ -107,7 +128,21 @@ def get_prob_classification_forest(
     model, feat_input: tf.Tensor, sigma: float, temperature: float
 ) -> tf.Tensor:
     """
-    This function takes decision tree node's probabilities of each data point and calculate softmax
+    Calculate the softmax probabilities for classification for a random forest or AdaBoost model.
+
+    Parameters
+    model: RandomForestClassifier or AdaBoostClassifier
+        The trained decision tree model.
+    feat_input: tf.Tensor
+        The input feature matrix.
+    sigma: float
+        The sigma value used to compute the activation of nodes in each decision tree.
+    temperature: float
+        The temperature to adjust the scale of the logits.
+
+    Returns
+    tf.Tensor
+        The softmax probabilities of the classification.
     """
     dt_prob_list = [
         get_prob_classification_tree(estimator, feat_input, sigma)
@@ -136,7 +171,18 @@ def filter_hinge_loss(
     n_class, mask_vector, feat_input, sigma, temperature, model
 ) -> tf.Tensor:
     """
-    This function takes each data point's probability/softmax from the model and return filtered probabilities
+    Calculates the filtered probabilities of each data point for the given model.
+
+    Parameters:
+    - n_class (int): Number of classes.
+    - mask_vector (np.ndarray): A boolean mask indicating which data points should be considered.
+    - feat_input (tf.Tensor): The feature input for the model.
+    - sigma (float): The value of sigma for computing the probabilities.
+    - temperature (float): The temperature to be used for the softmax function.
+    - model: The machine learning model (e.g., DecisionTreeClassifier, RandomForestClassifier, AdaBoostClassifier).
+
+    Returns:
+    - hinge_loss (tf.Tensor): The filtered probabilities of each data point.
     """
     n_input = feat_input.shape[0]
 
@@ -161,16 +207,33 @@ def filter_hinge_loss(
 def compute_cfe(
     model,
     feat_input,
-    distance_function,
-    opt,
-    sigma_val,
-    temperature_val,
-    distance_weight_val,
-    lr,
+    distance_function: str,
+    opt: str,
+    sigma_val: float,
+    temperature_val: float,
+    distance_weight_val: float,
+    lr: float,
     num_iter=100,
     x_train=None,
     verbose=1,
 ):
+    """
+    This function computes Counterfactual Explanations (CFE) using gradient descent method.
+
+    model: The machine learning model (e.g., DecisionTreeClassifier, RandomForestClassifier, AdaBoostClassifier).
+    feat_input: numpy array, the input feature to generate CFE
+    distance_function: str, distance function - one of "euclidean", "cosine", "l1" and "mahal"
+    opt: str, optimization method, either 'adam' or 'gd'
+    sigma_val: float, sigma value for hinge loss
+    temperature_val: float, temperature value for hinge loss
+    distance_weight_val: float, weight value for distance loss
+    lr: float, learning rate for gradient descent optimization
+    num_iter: int, number of iterations for gradient descent optimization (default=100)
+    x_train: numpy array, the training data used to fit the original model
+    verbose: int, verbosity of the function (default=1)
+
+    tuple, number of examples that remain unchanged, the cfe distances for the changed examples and the best perturb
+    """
     perturbed = tf.Variable(
         initial_value=feat_input,
         trainable=True,
