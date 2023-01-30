@@ -14,36 +14,30 @@ parser.add_argument("sigma", type=float, default=1.0)
 parser.add_argument("temperature", type=float, default=1.0)
 parser.add_argument("distance_weight", type=float, default=0.01)
 parser.add_argument("lr", type=float, default=0.001)
-parser.add_argument(
-    "opt",
-    type=str,
-    default="adam",
-    help="Options are either adam or gd (as str)",
-)
+parser.add_argument("opt", type=str, default="adam", help="Options are either adam or gd (as str)")
 parser.add_argument("data_name", type=str)
 parser.add_argument("distance_function", type=str)
 
-args = parser.parse_args()
-model_type = args.model_type
-num_iter = args.num_iter
-sigma_val = args.sigma
-temperature_val = args.temperature
-distance_weight_val = args.distance_weight
-lr = args.lr
-opt = args.opt
-data_name = args.data_name
-distance_function = args.distance_function
 
-
-def main():
-    output_root = "hyperparameter_tuning/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
+def main(
+    model_type: str,
+    num_iter: int,
+    sigma: float,
+    temperature: float,
+    distance_weight: float,
+    lr: float,
+    opt: str,
+    data_name: str,
+    distance_function: str,
+):
+    output_root = "results/{}/{}/{}/perturbs_{}_sigma{}_temp{}_dweight{}_lr{}".format(
         distance_function,
         data_name,
         model_type,
         opt,
-        sigma_val,
-        temperature_val,
-        distance_weight_val,
+        sigma,
+        temperature,
+        distance_weight,
         lr,
     )
 
@@ -67,9 +61,9 @@ def main():
         feat_input,
         distance_function,
         opt,
-        sigma_val,
-        temperature_val,
-        distance_weight_val,
+        sigma,
+        temperature,
+        distance_weight,
         lr,
         num_iter=num_iter,
         x_train=x_train,
@@ -90,4 +84,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parser.parse_args()
+
+    main(
+        args.model_type,
+        args.num_iter,
+        args.sigma,
+        args.temperature,
+        args.distance_weight,
+        args.lr,
+        args.opt,
+        args.data_name,
+        args.distance_function,
+    )

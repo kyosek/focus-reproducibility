@@ -21,6 +21,7 @@ parser.add_argument(
 )
 parser.add_argument("data_name", type=str)
 parser.add_argument("distance_function", type=str)
+parser.add_argument("n_trials", type=int)
 
 args = parser.parse_args()
 model_type = args.model_type

@@ -10,18 +10,33 @@ To install requirements:
 pip install -r requirements.txt
 ```
 
+## Usage
 
-## Using FOCUS to generate counterfactual explanations
-
-To train FOCUS for each dataset, run the following commands:
-
-```train
-python main.py --sigma=1.0 --temperature=1.0 --distance_weight=0.01 --lr=0.001 --opt=adam --model_name=<MODEL_NAME> --data_name=<DATA NAME> --model_type=<MODEL TYPE> --distance_function=<euclidean/cosine/etc>
+### Generate counterfactual explanation
+The main function - generating counterfactual explanations is in src/main.py.
+This can be run with arguments:
+- sigma: 
+Below is an example command on the root directory:
+```text
+python src/main.py model_type=dt num_itr=1000 sigma=10.0 temperature=1.0 weight_distance=0.01 lr=0.001 opt=adam data_name=cf_german_test distance_function=l1
 ```
-
 >📋  This will create another folder in the main directory called 'results', where the results files will be stored.
 
+### Hyperparameter tuning
+Run below example command on the root directory:
+```text
+python src/hyperparameter_tuning.py model_type=dt num_itr=1000 sigma=10.0 temperature=1.0 weight_distance=0.01 lr=0.001 opt=adam data_name=cf_german_test distance_function=l1 n_trials=100
+```
 
-## Pre-trained Models
+## Testing
+After installation, you can launch the test suite from outside the source directory (you will need to have pytest installed):
+```text
+pytest
+```
 
-The pretrained models are available in the models folder
+## Data and Models
+
+The datasets and models that were used in the experiments are also available in this repository:
+- Dataset: /data/
+- Pretrained models of the original paper: /models/
+- Pretrained models of the reproducibility challenge: /retrained_models/
