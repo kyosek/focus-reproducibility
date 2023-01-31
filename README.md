@@ -10,18 +10,46 @@ To install requirements:
 pip install -r requirements.txt
 ```
 
+## Usage
 
-## Using FOCUS to generate counterfactual explanations
+### Generate counterfactual explanation
+The main function - generating counterfactual explanations is located in src/main.py.
+This can be run with arguments:
+- model_type: (str) name of the model type (one of "dt", "rf" and "ab")
+- num_iter: (int) number of iterations (all the experiments used 1,000)
+- sigma: (float) smoothing function of the sigmoid function
+- temperature: (float) temperature value for hinge loss
+- distance_weight: (float) weight value for distance loss
+- lr: (float) learning rate of the optimiser
+- opt: (str) name of the optimiser. Use either "adam" or "sgd". All the experiments used adam
+- data_name: (str) name of the data. All the data are located in /data/
+- distance_function: (str) distance function - one of "euclidean", "cosine", "l1" and "mahal"
 
-To train FOCUS for each dataset, run the following commands:
-
-```train
-python main.py --sigma=1.0 --temperature=1.0 --distance_weight=0.01 --lr=0.001 --opt=adam --model_name=<MODEL_NAME> --data_name=<DATA NAME> --model_type=<MODEL TYPE> --distance_function=<euclidean/cosine/etc>
+Below is an example command on the root directory:
+```text
+python src/main.py model_type=dt num_itr=1000 sigma=10.0 temperature=1.0 weight_distance=0.01 lr=0.001 opt=adam data_name=cf_german_test distance_function=l1
 ```
-
 >📋  This will create another folder in the main directory called 'results', where the results files will be stored.
 
+### Hyperparameter tuning
+The hyperparameter tuning module - this will run Bayesian hyperparameter tuning on the predefined search space.
+This can be run with the same arguments as the main function + number of trials.
+- n_trials: (int) number of hyperparameter tuning trials
 
-## Pre-trained Models
+Below is an example command on the root directory:
+```text
+python src/hyperparameter_tuning.py model_type=dt num_itr=1000 sigma=10.0 temperature=1.0 weight_distance=0.01 lr=0.001 opt=adam data_name=cf_german_test distance_function=l1 n_trials=100
+```
 
-The pretrained models are available in the models folder
+## Testing
+The unit tests can be found in /tests/. This uses pytest to run. You can launch the test suite on the root directory:
+```text
+pytest
+```
+
+## Data and Models
+
+The datasets and models that were used in the experiments are also available in this repository:
+- Dataset: /data/
+- Pretrained models of the original paper (just as a reference - not compatible with this code implementation): /models/
+- Pretrained models of the reproducibility challenge: /retrained_models/
