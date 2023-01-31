@@ -64,7 +64,7 @@ def tf_cov(x_train) -> tf.Tensor:
     Computes the covariance matrix of the input feature matrix x_train.
 
     Args:
-    x_train: a TensorFlow tensor of shape (num_samples, num_features) representing the feature matrix.
+    x_train: the train set
 
     Returns:
     cov_xx: a TensorFlow tensor of shape (num_features, num_features) representing the covariance matrix.
@@ -85,7 +85,7 @@ def safe_mahal(matrix_diff, x_train, epsilon=10.0 ** -10) -> tf.Tensor:
     Args:
     matrix_diff: A tensor of shape (N, D) representing the difference between perturbed and feat_input
     x_train: The training data.
-    epsilon: (optional) A scalar value to be added to the diagonal of covariance matrix
+    epsilon: A scalar value to be added to the diagonal of covariance matrix
     to make it invertible.
     Returns:
 

@@ -14,41 +14,30 @@ parser.add_argument("temperature", type=float, default=1.0)
 parser.add_argument("distance_weight", type=float, default=0.01)
 parser.add_argument("lr", type=float, default=0.001)
 parser.add_argument(
-    "opt",
-    type=str,
-    default="adam",
-    help="Options are either adam or gd (as str)",
+    "opt", type=str, default="adam", help="Options are either adam or gd (as str)"
 )
 parser.add_argument("data_name", type=str)
 parser.add_argument("distance_function", type=str)
 parser.add_argument("n_trials", type=int)
 
-args = parser.parse_args()
-model_type = args.model_type
-num_iter = args.num_iter
-sigma_val = args.sigma
-distance_weight_val = args.distance_weight
-lr = args.lr
-opt = args.opt
-data_name = args.data_name
-distance_function = args.distance_function
-
 
 def objective(trial):
     """
     This function is an objective function for hyperparameter tuning using optuna.
-    It trains and evaluates a decision tree model for a given dataset and computes the Counterfactual Explanation (CFE)
-    distance and unchanged rate for a set of hyperparameters.
+    It explores the hyperparameter sets and evaluates the result on a given model and dataset
+    Mean distance and number of unchanged instances are used for the evaluation.
 
     Args:
     trial (optuna.Trial): Object that contains information about the current trial, including hyperparameters.
 
     Returns:
-    CFE distance mean and unchanged rate squared, as an objective function for hyperparameter optimization.
+    Mean CFE distance mean + number of unchanged instances squared -
+    This is the objective function for hyperparameter optimization
 
-    * note: typically we want to minimise a number of unchanged first, so penalising the score by having squared number.
+    * Note: typically we want to minimise a number of unchanged first, so penalising the score by having squared number.
     Also, to not distort this objective, having the mean distance divided by 100.
     """
+    # This is for tracking the number of changed instances for each trial
     try:
         unchanged_df = pd.read_csv(f"visualisation_data/{data_name}_unchanged.csv")
     except FileNotFoundError:
@@ -89,6 +78,7 @@ def objective(trial):
         verbose=0,
     )
 
+    # Append the number of unchanged instances
     if type(unchanged_df) == list:
         unchanged_df.append(unchanged_ever)
     else:
@@ -106,8 +96,18 @@ def objective(trial):
 
 
 if __name__ == "__main__":
+    args = parser.parse_args()
+    model_type = args.model_type
+    num_iter = args.num_iter
+    sigma_val = args.sigma
+    distance_weight_val = args.distance_weight
+    lr = args.lr
+    opt = args.opt
+    data_name = args.data_name
+    distance_function = args.distance_function
+
     study = optuna.create_study(direction="minimize")
-    study.optimize(objective, n_trials=100)
+    study.optimize(objective, n_trials=args.n_trials)
 
     print(f"Number of finished trials: {len(study.trials)}")
 
