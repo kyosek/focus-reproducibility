@@ -220,6 +220,7 @@ def compute_cfe(
     """
     This function computes Counterfactual Explanations (CFE) using gradient descent method.
 
+    Args:
     model: The machine learning model (e.g., DecisionTreeClassifier, RandomForestClassifier, AdaBoostClassifier).
     feat_input: numpy array, the input feature to generate CFE
     distance_function: str, distance function - one of "euclidean", "cosine", "l1" and "mahal"
@@ -232,6 +233,7 @@ def compute_cfe(
     x_train: numpy array, the training data used to fit the original model
     verbose: int, verbosity of the function (default=1)
 
+    Returns:
     tuple, number of examples that remain unchanged, the cfe distances for the changed examples and the best perturb
     """
     perturbed = tf.Variable(

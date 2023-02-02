@@ -13,9 +13,7 @@ parser.add_argument("sigma", type=float, default=1.0)
 parser.add_argument("temperature", type=float, default=1.0)
 parser.add_argument("distance_weight", type=float, default=0.01)
 parser.add_argument("lr", type=float, default=0.001)
-parser.add_argument(
-    "opt", type=str, default="adam", help="Options are either adam or gd (as str)"
-)
+parser.add_argument("opt", type=str, default="adam", help="Options are either adam or gd (as str)")
 parser.add_argument("data_name", type=str)
 parser.add_argument("distance_function", type=str)
 parser.add_argument("n_trials", type=int)
@@ -31,7 +29,7 @@ def objective(trial):
     trial (optuna.Trial): Object that contains information about the current trial, including hyperparameters.
 
     Returns:
-    Mean CFE distance mean + number of unchanged instances squared -
+    Mean CFE distance + number of unchanged instances squared -
     This is the objective function for hyperparameter optimization
 
     * Note: typically we want to minimise a number of unchanged first, so penalising the score by having squared number.

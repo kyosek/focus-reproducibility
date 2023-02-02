@@ -8,7 +8,7 @@ def safe_euclidean(matrix_diff, epsilon=10.0 ** -10) -> tf.Tensor:
     """
     Calculates the Euclidean distance between two matrices with a small epsilon added to prevent singularities.
 
-    Parameters:
+    Args:
     matrix_diff: A tensor representing the difference between two matrices
     epsilon (float): A small number added to prevent singularities in the calculation (default 10.0 ** -10)
 
@@ -109,7 +109,7 @@ def calculate_distance(
     """
     Calculates the distance between the perturbed and feat_input data using the specified distance function.
 
-    Parameters:
+    Args:
     - distance_function (str): The distance function to use, can be either "euclidean", "cosine", "l1" or "mahal".
     - perturbed (tf.Variable): The perturbed data.
     - feat_input (np.ndarray): The original feature data.
