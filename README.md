@@ -33,7 +33,7 @@ python src/main.py model_type=dt num_itr=1000 sigma=10.0 temperature=1.0 weight_
 > stored in "results" folder.
 
 ### Hyperparameter tuning
-The hyperparameter tuning module - this will run Bayesian hyperparameter tuning on the predefined search space.
+The hyperparameter tuning module - this will run Optuna's Bayesian optimisation on the predefined search space.
 This can be run with the same arguments as the main function + number of trials.
 - n_trials: (int) number of hyperparameter tuning trials
 
