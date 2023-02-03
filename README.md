@@ -11,7 +11,6 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-
 ### Generate counterfactual explanation
 The main function - run counterfactual explanation generation and save results - is located in src/main.py.
 This can be run with arguments:
