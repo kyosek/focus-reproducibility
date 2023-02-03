@@ -1,8 +1,9 @@
 # [Re]:FOCUS: Flexible Optimizable Counterfactual Explanations for Tree Ensembles
 
-This repository presents a re-implemented codebase and experiment results of [AAAI 2022 paper "FOCUS: Flexible Optimizable Counterfactual Explanations for Tree Ensembles"](https://arxiv.org/abs/1911.12199). 
+This repository presents a re-implemented codebase and experiment results of [AAAI 2022 paper "FOCUS: Flexible Optimizable Counterfactual Explanations for Tree Ensembles"](https://arxiv.org/abs/1911.12199).
 
 ## Requirements
+Python 3.7
 
 To install requirements:
 
