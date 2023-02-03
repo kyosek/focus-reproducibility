@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
-from src.utils import calculate_distance
+from utils import calculate_distance
 
 
 def _parse_class_tree(tree, feat_input: np.ndarray, sigma: float) -> list:

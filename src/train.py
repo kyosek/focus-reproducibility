@@ -43,9 +43,7 @@ def _evaluate_model(model, data_name: str):
     print(accuracy_score(y_test, preds))
 
 
-def train_model(
-    model_type: str, data_name: str, max_depth: int, n_estimators=None
-):
+def train_model(model_type: str, data_name: str, max_depth: int, n_estimators=None):
     """
     Trains and saves the specified model type on the given data. Then evaluate the model accuracy.
 

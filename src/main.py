@@ -1,6 +1,6 @@
 import numpy as np
-from src.evaluate import generate_cf_stats
-from src.counterfactual_explanation import compute_cfe
+from evaluate import generate_cf_stats
+from counterfactual_explanation import compute_cfe
 import time
 import pickle
 import pandas as pd
