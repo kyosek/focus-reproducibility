@@ -52,8 +52,10 @@ pytest
 ### train
 train.py file was used to retrain the original models with new hyperparameters.
 This file also evaluates accuracy of the retrained model.
-```text
 
+Below is an example command on the root directory:
+```text
+python src/train.py model_type=ab data_name=cf_heloc_data_train max_depth=3 n_estimators=100
 ```
 
 ### Preprocess German dataset
@@ -65,6 +67,6 @@ python src/preprocess_german_data.py
 ## Data and Models
 
 The datasets and models that were used in the experiments are also available in this repository:
-- Dataset: /data/
-- Pretrained models of the original paper (just as a reference - not compatible with this code implementation): /models/
-- Pretrained models of the reproducibility challenge: /retrained_models/
+- **Dataset**: data/
+- **Pretrained models of the original paper** (just as a reference - not compatible with this code implementation): models/
+- **Pretrained models of the reproducibility challenge**: retrained_models/

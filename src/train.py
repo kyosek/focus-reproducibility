@@ -4,6 +4,14 @@ import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("model_type", type=str)
+parser.add_argument("data_name", type=str)
+parser.add_argument("max_depth", type=int)
+parser.add_argument("n_estimators", type=int)
 
 
 def _evaluate_model(model, data_name: str):
@@ -62,17 +70,17 @@ def train_model(
     y_train = np.where(feat_matrix[:, -1] == -1, 0, 1)
 
     if model_type == "dt":
-        model = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
+        model = DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
     elif model_type == "rf":
         model = RandomForestClassifier(
-            n_estimators=n_estimators, max_depth=max_depth, random_state=42
+            n_estimators=n_estimators, max_depth=max_depth, random_state=random_state
         )
     elif model_type == "ab":
-        dt = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
+        dt = DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
         model = AdaBoostClassifier(
             base_estimator=dt,
             n_estimators=n_estimators,
-            random_state=42,
+            random_state=random_state,
         )
 
     model.fit(x_train, y_train)
@@ -85,9 +93,12 @@ def train_model(
 
 
 if __name__ == "__main__":
+    random_state = 42
+    args = parser.parse_args()
+
     train_model(
-        model_type="ab",
-        data_name="cf_german_train",
-        max_depth=2,
-        n_estimators=100,
+        model_type=args.model_type,
+        data_name=args.data_name,
+        max_depth=args.max_depth,
+        n_estimators=args.n_estimators,
     )
