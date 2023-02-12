@@ -87,6 +87,7 @@ def main(
         unchanged_ever,
         cfe_distance,
         start_time,
+        end_time,
     )
 
     pd.DataFrame(cfe_distance).to_csv(f"cfe_{model_type}_{train_name}.csv")

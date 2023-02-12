@@ -13,6 +13,7 @@ def generate_cf_stats(
     unchanged_ever,
     counterfactual_examples,
     start_time,
+    end_time,
 ):
     cf_stats = {
         "dataset": data_name,
